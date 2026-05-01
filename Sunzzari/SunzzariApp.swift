@@ -2,11 +2,11 @@ import SwiftUI
 import UserNotifications
 
 extension Notification.Name {
-    static let openWeeklyBestOf = Notification.Name("sunzzari.openWeeklyBestOf")
+    static let openWeeklyBestOf = Notification.Name("miracles.openWeeklyBestOf")
 }
 
 @main
-struct SunzzariApp: App {
+struct MiraclesApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {

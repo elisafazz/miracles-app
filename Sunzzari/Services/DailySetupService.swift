@@ -8,8 +8,8 @@ final class DailySetupService: @unchecked Sendable {
     static let shared = DailySetupService()
     private init() {}
 
-    private static let pickPrefix      = "sunzzari_today_"
-    private static let setupDonePrefix = "sunzzari_setup_done_"
+    private static let pickPrefix      = "miracles_today_"
+    private static let setupDonePrefix = "miracles_setup_done_"
 
     // MARK: - Entry selection
 

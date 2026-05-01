@@ -28,7 +28,7 @@ struct Restaurant: Identifiable, Codable {
     }
 
     // Coordinate cache keys stored in UserDefaults as "lat,lon"
-    static func geoKey(for id: String) -> String { "sunzzari_geo_\(id)" }
+    static func geoKey(for id: String) -> String { "miracles_geo_\(id)" }
 }
 
 // Location and Good For options — sourced from Notion DB schema

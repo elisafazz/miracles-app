@@ -26,7 +26,7 @@ enum Constants {
         static let cycleTrackerDBID = "00000000-0000-0000-0000-000000000000"
         static let creditsTrackerDBID = "00000000-0000-0000-0000-000000000000"
         static let thoughtActionDBID  = "00000000-0000-0000-0000-000000000000"
-        static let sunzzariInfoDBID   = "00000000-0000-0000-0000-000000000000"
+        static let miraclesInfoDBID   = "00000000-0000-0000-0000-000000000000"
         static let version          = "2022-06-28"
     }
 
@@ -61,8 +61,9 @@ enum Constants {
         static let ntfyTopic = "miracles-status-c5e1b94f7a28"
         // TODO Phase 6: replace partner-pair page IDs with MiraclesPerson page IDs
         // (Elisa / Mom / Sister, three pages) once Cards is decided IN/OUT
-        static let hummingbirdPageID = "00000000-0000-0000-0000-000000000000"
-        static let branchPageID      = "00000000-0000-0000-0000-000000000000"
+        static let elisaPageID  = "00000000-0000-0000-0000-000000000000"
+        static let momPageID    = "00000000-0000-0000-0000-000000000000"
+        static let sisterPageID = "00000000-0000-0000-0000-000000000000"
         /// APNs push backend
         static let pushEndpoint = "https://miracles-backend.vercel.app/api/push"
         static let pushSecret   = Secrets.Push.secret

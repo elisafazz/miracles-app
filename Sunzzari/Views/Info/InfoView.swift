@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InfoView: View {
-    @State private var entries: [SunzzariInfoEntry] = []
+    @State private var entries: [MiraclesInfoEntry] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
 
@@ -56,7 +56,7 @@ struct InfoView: View {
         isLoading = true
         errorMessage = nil
         do {
-            entries = try await NotionService.shared.fetchSunzzariInfo()
+            entries = try await NotionService.shared.fetchMiraclesInfo()
         } catch {
             errorMessage = "Couldn't load reference data."
         }
@@ -64,7 +64,7 @@ struct InfoView: View {
     }
 
     @ViewBuilder
-    private func infoCard(_ entry: SunzzariInfoEntry) -> some View {
+    private func infoCard(_ entry: MiraclesInfoEntry) -> some View {
         HStack(spacing: 16) {
             Image(systemName: entry.category.icon)
                 .font(.system(size: 26, design: .serif))

@@ -1,6 +1,6 @@
 import Foundation
 
-struct SunzzariInfoEntry: Identifiable {
+struct MiraclesInfoEntry: Identifiable {
     let id: String
     let title: String
     let category: Category

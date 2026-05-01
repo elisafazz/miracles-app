@@ -29,7 +29,7 @@ struct TripItem: Identifiable, Codable {
         return fmt.date(from: str)
     }
 
-    static func geoKey(for id: String) -> String { "sunzzari_travel_geo_\(id)" }
+    static func geoKey(for id: String) -> String { "miracles_travel_geo_\(id)" }
 
     // MARK: - Enums
 

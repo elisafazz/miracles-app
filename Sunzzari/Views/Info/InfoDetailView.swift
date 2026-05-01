@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InfoDetailView: View {
-    let entry: SunzzariInfoEntry
+    let entry: MiraclesInfoEntry
     @State private var blocks: [InfoBlock] = []
     @State private var isLoading = true
     @State private var errorMessage: String?

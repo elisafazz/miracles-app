@@ -195,11 +195,11 @@ struct NitsAndBugsView: View {
         \(details.isEmpty ? "(no details)" : details)
 
         ---
-        App: Sunzzari \(appVersion) (\(build))
+        App: Miracles \(appVersion) (\(build))
         Device: \(device.model) — iOS \(device.systemVersion)
         """
 
-        let subject = "Sunzzari \(reportType.rawValue): \(title)"
+        let subject = "Miracles \(reportType.rawValue): \(title)"
         let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let encodedBody = bodyText.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let urlString = "mailto:elisafazzari815@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)"

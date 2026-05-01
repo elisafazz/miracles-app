@@ -9,7 +9,7 @@ final class StatusService: @unchecked Sendable {
 
     private let notionBase = "https://api.notion.com/v1"
     private let ntfyBase   = "https://ntfy.sh"
-    private let lastCheckKey = "sunzzari_status_last_check"
+    private let lastCheckKey = "miracles_status_last_check"
 
     private var notionHeaders: [String: String] {
         [
@@ -28,10 +28,10 @@ final class StatusService: @unchecked Sendable {
 
     // MARK: - Fetch
 
-    func fetchBoth() async throws -> (hummingbird: StatusEntry, branch: StatusEntry) {
-        async let h = fetchPage(id: Constants.Status.hummingbirdPageID)
-        async let b = fetchPage(id: Constants.Status.branchPageID)
-        return try await (h, b)
+    func fetchBoth() async throws -> (elisa: StatusEntry, mom: StatusEntry) {
+        async let e = fetchPage(id: Constants.Status.elisaPageID)
+        async let m = fetchPage(id: Constants.Status.momPageID)
+        return try await (e, m)
     }
 
     private func fetchPage(id: String) async throws -> StatusEntry {
@@ -141,7 +141,7 @@ final class StatusService: @unchecked Sendable {
 
     // MARK: - APNs push (via Vercel backend)
 
-    private let pendingTokenKey = "sunzzari_pending_apns_token"
+    private let pendingTokenKey = "miracles_pending_apns_token"
 
     /// Store this device's APNs token in its own Notion Status page.
     /// Always caches the token in UserDefaults first. If identity is not yet set
@@ -150,10 +150,10 @@ final class StatusService: @unchecked Sendable {
     func storeDeviceToken(_ token: String) async {
         UserDefaults.standard.set(token, forKey: pendingTokenKey)
         guard AppIdentity.current != nil else { return }
-        // TODO(miracles-phase-1.5): isBranch is 2-person — Mom and Sister will collide on hummingbirdPageID. Replace with MiraclesPerson page-id lookup.
-        let ownPageID = AppIdentity.isBranch
-            ? Constants.Status.branchPageID
-            : Constants.Status.hummingbirdPageID
+        // TODO(miracles-phase-1.5): 2-person logic — Mom and Sister will collide on momPageID. Replace with MiraclesPerson page-id lookup.
+        let ownPageID = AppIdentity.isElisa
+            ? Constants.Status.elisaPageID
+            : Constants.Status.momPageID
         try? await patchPage(id: ownPageID, body: [
             "properties": [
                 "DeviceToken": ["rich_text": [["text": ["content": token]]]]
@@ -168,9 +168,9 @@ final class StatusService: @unchecked Sendable {
         guard let token = UserDefaults.standard.string(forKey: pendingTokenKey),
               !token.isEmpty else { return }
         // TODO(miracles-phase-1.5): same 2-vs-3 collision as storeDeviceToken — fix together.
-        let ownPageID = AppIdentity.isBranch
-            ? Constants.Status.branchPageID
-            : Constants.Status.hummingbirdPageID
+        let ownPageID = AppIdentity.isElisa
+            ? Constants.Status.elisaPageID
+            : Constants.Status.momPageID
         try? await patchPage(id: ownPageID, body: [
             "properties": [
                 "DeviceToken": ["rich_text": [["text": ["content": token]]]]
@@ -182,9 +182,9 @@ final class StatusService: @unchecked Sendable {
     /// Fetches the partner's DeviceToken from Notion, then POSTs to the push endpoint.
     func sendPush(title: String, body: String) async {
         // TODO(miracles-phase-1.5): "partner" is 2-person; for 3-person Miracles this needs to fan out to the other 2 device tokens, not pick one "partner".
-        let partnerPageID = AppIdentity.isBranch
-            ? Constants.Status.hummingbirdPageID
-            : Constants.Status.branchPageID
+        let partnerPageID = AppIdentity.isElisa
+            ? Constants.Status.momPageID
+            : Constants.Status.elisaPageID
 
         guard let token = await fetchDeviceToken(pageID: partnerPageID), !token.isEmpty else { return }
         guard let url = URL(string: Constants.Status.pushEndpoint) else { return }
@@ -219,7 +219,7 @@ final class StatusService: @unchecked Sendable {
     /// Returns the entryID only if the stored date matches today's dateStr.
     func fetchTodayPick(for dateStr: String) async -> String? {
         // TODO(miracles-phase-1.5): hardcoded to hummingbirdPageID — for 3-person Miracles, decide which page is the "shared today pick" anchor (or move to a dedicated shared page).
-        guard let url = URL(string: "\(notionBase)/pages/\(Constants.Status.hummingbirdPageID)") else { return nil }
+        guard let url = URL(string: "\(notionBase)/pages/\(Constants.Status.momPageID)") else { return nil }
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         notionHeaders.forEach { req.setValue($1, forHTTPHeaderField: $0) }
@@ -237,7 +237,7 @@ final class StatusService: @unchecked Sendable {
     /// Writes the shared Tier-3 pick to the Hummingbird Notion page.
     func storeTodayPick(dateStr: String, entryID: String) async {
         let value = "\(dateStr):\(entryID)"
-        try? await patchPage(id: Constants.Status.hummingbirdPageID, body: [
+        try? await patchPage(id: Constants.Status.momPageID, body: [
             "properties": [
                 "TodayPick": ["rich_text": [["text": ["content": value]]]]
             ]

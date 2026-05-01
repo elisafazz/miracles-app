@@ -20,7 +20,7 @@ final class BoopService: @unchecked Sendable {
 
     private let baseURL = "https://ntfy.sh"
     private let topic = Constants.Boop.topic
-    private let lastCheckKey = "sunzzari_boop_last_check"
+    private let lastCheckKey = "miracles_boop_last_check"
 
     /// Stable 6-char device tag used to filter out own sent messages
     private var deviceTag: String {

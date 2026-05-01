@@ -13,7 +13,7 @@ final class NotionService: @unchecked Sendable {
     private var activitiesCache: (items: [Activity], at: Date)?
     private var cycleCache: (entries: [CycleEntry], at: Date)?
     private var creditsCache: (entries: [CreditEntry], at: Date)?
-    private var infoCache: (entries: [SunzzariInfoEntry], at: Date)?
+    private var infoCache: (entries: [MiraclesInfoEntry], at: Date)?
     private var thoughtsCache: (entries: [ThoughtEntry], at: Date)?
     private let cacheTTL: TimeInterval = 300 // 5 minutes
 
@@ -34,14 +34,13 @@ final class NotionService: @unchecked Sendable {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     }
 
-    // TODO(miracles-phase-1.5): Rename "sunzzari_" prefix to "miracles_" during the codebase Sunzzari->Miracles sweep. App sandbox isolates this so it isn't a correctness bug, but it's misleading for future maintainers.
     private func saveToDisk(_ data: Data, name: String) {
-        let url = diskCacheDir.appendingPathComponent("sunzzari_\(name).json")
+        let url = diskCacheDir.appendingPathComponent("miracles_\(name).json")
         try? data.write(to: url, options: .atomic)
     }
 
     private func loadFromDisk(name: String) -> Data? {
-        let url = diskCacheDir.appendingPathComponent("sunzzari_\(name).json")
+        let url = diskCacheDir.appendingPathComponent("miracles_\(name).json")
         return try? Data(contentsOf: url)
     }
 
@@ -535,11 +534,11 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Fetch: Info
 
-    func fetchSunzzariInfo(force: Bool = false) async throws -> [SunzzariInfoEntry] {
+    func fetchMiraclesInfo(force: Bool = false) async throws -> [MiraclesInfoEntry] {
         if !force, let cached = infoCache, Date().timeIntervalSince(cached.at) < 300 {
             return cached.entries
         }
-        guard let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.sunzzariInfoDBID)/query") else {
+        guard let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.miraclesInfoDBID)/query") else {
             throw NotionError.badURL
         }
         var request = URLRequest(url: url)
@@ -628,7 +627,7 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Private: Parser (Info)
 
-    private func parseInfoEntries(from data: Data) -> [SunzzariInfoEntry] {
+    private func parseInfoEntries(from data: Data) -> [MiraclesInfoEntry] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
         return results.compactMap { page in
@@ -636,10 +635,10 @@ final class NotionService: @unchecked Sendable {
                   let props = page["properties"] as? [String: Any] else { return nil }
             let catStr = extractSelect(from: props["Category"]) ?? "Other"
             let tags = extractMultiSelect(from: props["Tags"])
-            return SunzzariInfoEntry(
+            return MiraclesInfoEntry(
                 id:       id,
                 title:    extractTitle(from: props["Name"]) ?? "Untitled",
-                category: SunzzariInfoEntry.Category(rawValue: catStr) ?? .other,
+                category: MiraclesInfoEntry.Category(rawValue: catStr) ?? .other,
                 tags:     tags
             )
         }

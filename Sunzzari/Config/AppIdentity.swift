@@ -1,18 +1,20 @@
 import Foundation
 
-enum SunzzariPerson: String {
-    case branch      = "Branch"
-    case hummingbird = "Hummingbird"
+enum MiraclesPerson: String {
+    case elisa  = "Elisa"
+    case mom    = "Mom"
+    case sister = "Sister"
 }
 
 struct AppIdentity {
-    static let udKey = "sunzzari_identity"
+    static let udKey = "miracles_identity"
 
-    static var current: SunzzariPerson? {
-        get { UserDefaults.standard.string(forKey: udKey).flatMap(SunzzariPerson.init) }
+    static var current: MiraclesPerson? {
+        get { UserDefaults.standard.string(forKey: udKey).flatMap(MiraclesPerson.init) }
         set { UserDefaults.standard.set(newValue?.rawValue, forKey: udKey) }
     }
 
-    static var isBranch: Bool      { current == .branch }
-    static var isHummingbird: Bool { current == .hummingbird }
+    static var isElisa: Bool  { current == .elisa }
+    static var isMom: Bool    { current == .mom }
+    static var isSister: Bool { current == .sister }
 }

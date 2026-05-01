@@ -7,13 +7,13 @@ final class TravelService: @unchecked Sendable {
 
     // Bump this when geocoding logic changes to clear stale caches
     private static let geocodeVersion = 3
-    private static let geocodeVersionKey = "sunzzari_travel_geocode_version"
+    private static let geocodeVersionKey = "miracles_travel_geocode_version"
 
     private init() {
         let stored = UserDefaults.standard.integer(forKey: Self.geocodeVersionKey)
         if stored < Self.geocodeVersion {
             let defaults = UserDefaults.standard
-            for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("sunzzari_travel_geo_") {
+            for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("miracles_travel_geo_") {
                 defaults.removeObject(forKey: key)
             }
             defaults.set(Self.geocodeVersion, forKey: Self.geocodeVersionKey)
@@ -38,12 +38,12 @@ final class TravelService: @unchecked Sendable {
     }
 
     private func saveToDisk(_ data: Data, name: String) {
-        let url = diskCacheDir.appendingPathComponent("sunzzari_travel_\(name).json")
+        let url = diskCacheDir.appendingPathComponent("miracles_travel_\(name).json")
         try? data.write(to: url, options: .atomic)
     }
 
     private func loadFromDisk(name: String) -> Data? {
-        let url = diskCacheDir.appendingPathComponent("sunzzari_travel_\(name).json")
+        let url = diskCacheDir.appendingPathComponent("miracles_travel_\(name).json")
         return try? Data(contentsOf: url)
     }
 

@@ -16,8 +16,8 @@ final class LocationService: @unchecked Sendable {
     private let delegate = LocationDelegate()
 
     // UserDefaults keys for last known own location
-    static let latKey = "sunzzari_own_lat"
-    static let lonKey = "sunzzari_own_lon"
+    static let latKey = "miracles_own_lat"
+    static let lonKey = "miracles_own_lon"
 
     func requestAlwaysAuthorization() async {
         manager.delegate = delegate
@@ -81,9 +81,9 @@ private final class LocationDelegate: NSObject, CLLocationManagerDelegate {
     }
 
     private func ownPageID() -> String {
-        AppIdentity.isBranch
-            ? Constants.Status.branchPageID
-            : Constants.Status.hummingbirdPageID
+        AppIdentity.isElisa
+            ? Constants.Status.elisaPageID
+            : Constants.Status.momPageID
     }
 }
 

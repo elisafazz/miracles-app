@@ -5,19 +5,19 @@ import CoreLocation
 struct StatusView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @State private var hummingbird: StatusEntry?
-    @State private var branch: StatusEntry?
+    @State private var elisa: StatusEntry?
+    @State private var mom: StatusEntry?
     @State private var isLoading = true
     @State private var error: String?
     @State private var isSaving = false
 
     // Mood slider values
-    @State private var hMood: Int = 50
-    @State private var bMood: Int = 50
+    @State private var eMood: Int = 50
+    @State private var mMood: Int = 50
 
     // Adjective selections
-    @State private var hAdjective: String = ""
-    @State private var bAdjective: String = ""
+    @State private var eAdjective: String = ""
+    @State private var mAdjective: String = ""
 
     // Custom adjective text input
     @State private var customText: String = ""
@@ -71,14 +71,14 @@ struct StatusView: View {
                             // Split panels
                             HStack(alignment: .top, spacing: 0) {
                                 moodPanel(
-                                    emoji: "🕊️",
-                                    label: "HUMMINGBIRD",
-                                    mood: $hMood,
-                                    adjective: $hAdjective,
-                                    updatedAt: hummingbird?.moodUpdatedAt,
-                                    pageID: Constants.Status.hummingbirdPageID,
-                                    fromName: "Hummingbird",
-                                    isEditable: AppIdentity.isHummingbird
+                                    emoji: "🌸",
+                                    label: "ELISA",
+                                    mood: $eMood,
+                                    adjective: $eAdjective,
+                                    updatedAt: elisa?.moodUpdatedAt,
+                                    pageID: Constants.Status.elisaPageID,
+                                    fromName: "Elisa",
+                                    isEditable: AppIdentity.isElisa
                                 )
 
                                 Divider()
@@ -86,21 +86,21 @@ struct StatusView: View {
                                     .frame(width: 1)
 
                                 moodPanel(
-                                    emoji: "🌿",
-                                    label: "BRANCH",
-                                    mood: $bMood,
-                                    adjective: $bAdjective,
-                                    updatedAt: branch?.moodUpdatedAt,
-                                    pageID: Constants.Status.branchPageID,
-                                    fromName: "Branch",
-                                    isEditable: AppIdentity.isBranch
+                                    emoji: "🌷",
+                                    label: "MOM",
+                                    mood: $mMood,
+                                    adjective: $mAdjective,
+                                    updatedAt: mom?.moodUpdatedAt,
+                                    pageID: Constants.Status.momPageID,
+                                    fromName: "Mom",
+                                    isEditable: AppIdentity.isMom
                                 )
                             }
 
                             Divider().background(Color.white.opacity(0.1))
 
                             // Map
-                            StatusMapView(entries: [hummingbird, branch].compactMap { $0 })
+                            StatusMapView(entries: [elisa, mom].compactMap { $0 })
                                 .frame(height: 280)
                         }
                     }
@@ -189,9 +189,9 @@ struct StatusView: View {
                             pageID: pageID
                         )
                         // Refresh timestamps
-                        if let (h, b) = try? await StatusService.shared.fetchBoth() {
-                            hummingbird = h
-                            branch = b
+                        if let (e, m) = try? await StatusService.shared.fetchBoth() {
+                            elisa = e
+                            mom = m
                         }
                         isSaving = false
                     }
@@ -262,35 +262,35 @@ struct StatusView: View {
     // MARK: - Load
 
     private func load() async {
-        guard !Constants.Status.hummingbirdPageID.isEmpty,
-              !Constants.Status.branchPageID.isEmpty else {
+        guard !Constants.Status.elisaPageID.isEmpty,
+              !Constants.Status.momPageID.isEmpty else {
             error = "Status DB not configured.\nFill in page IDs in Constants.Status."
             isLoading = false
             return
         }
         do {
-            let (h, b) = try await StatusService.shared.fetchBoth()
-            hummingbird = h
-            branch = b
+            let (e, m) = try await StatusService.shared.fetchBoth()
+            elisa = e
+            mom = m
             // If own Notion entry has no location yet, inject last-known coordinate
             // from UserDefaults so the map shows a pin immediately after first location fix.
             if let coord = LocationService.shared.lastKnownCoordinate {
-                if AppIdentity.isHummingbird && h.latitude == nil {
-                    hummingbird = StatusEntry(id: h.id, name: h.name, mood: h.mood,
-                                             adjective: h.adjective, moodUpdatedAt: h.moodUpdatedAt,
-                                             latitude: coord.latitude, longitude: coord.longitude,
-                                             locationUpdatedAt: nil)
-                } else if AppIdentity.isBranch && b.latitude == nil {
-                    branch = StatusEntry(id: b.id, name: b.name, mood: b.mood,
-                                        adjective: b.adjective, moodUpdatedAt: b.moodUpdatedAt,
-                                        latitude: coord.latitude, longitude: coord.longitude,
-                                        locationUpdatedAt: nil)
+                if AppIdentity.isMom && m.latitude == nil {
+                    mom = StatusEntry(id: m.id, name: m.name, mood: m.mood,
+                                     adjective: m.adjective, moodUpdatedAt: m.moodUpdatedAt,
+                                     latitude: coord.latitude, longitude: coord.longitude,
+                                     locationUpdatedAt: nil)
+                } else if AppIdentity.isElisa && e.latitude == nil {
+                    elisa = StatusEntry(id: e.id, name: e.name, mood: e.mood,
+                                       adjective: e.adjective, moodUpdatedAt: e.moodUpdatedAt,
+                                       latitude: coord.latitude, longitude: coord.longitude,
+                                       locationUpdatedAt: nil)
                 }
             }
-            hMood = hummingbird?.mood ?? 50
-            bMood = branch?.mood ?? 50
-            hAdjective = hummingbird?.adjective ?? ""
-            bAdjective = branch?.adjective ?? ""
+            eMood = elisa?.mood ?? 50
+            mMood = mom?.mood ?? 50
+            eAdjective = elisa?.adjective ?? ""
+            mAdjective = mom?.adjective ?? ""
         } catch {
             self.error = error.localizedDescription
         }

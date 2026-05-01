@@ -16,7 +16,9 @@ struct StatusEntry: Identifiable {
         return CLLocationCoordinate2D(latitude: lat, longitude: lon)
     }
 
-    var isHummingbird: Bool { name == "Hummingbird" }
+    var isElisa: Bool  { name == "Elisa" }
+    var isMom: Bool    { name == "Mom" }
+    var isSister: Bool { name == "Sister" }
 
     var moodEmoji: String {
         switch mood {

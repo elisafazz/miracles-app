@@ -62,11 +62,11 @@ struct StatusMKMap: UIViewRepresentable {
             v.titleVisibility = .hidden
             v.subtitleVisibility = .hidden
 
-            if sa.entry.isHummingbird {
-                v.glyphText = "🕊️"
+            if sa.entry.isMom {
+                v.glyphText = "🌷"
                 v.markerTintColor = UIColor(red: 0.22, green: 0.74, blue: 0.97, alpha: 1) // sky blue #38BDF8
             } else {
-                v.glyphText = "🌿"
+                v.glyphText = "🌸"
                 v.markerTintColor = UIColor(red: 0.29, green: 0.87, blue: 0.50, alpha: 1) // green #4ADE80
             }
             return v

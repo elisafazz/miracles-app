@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     let onComplete: () -> Void
 
-    @State private var selected: SunzzariPerson? = AppIdentity.current
+    @State private var selected: MiraclesPerson? = AppIdentity.current
 
     var body: some View {
         ZStack {
@@ -26,16 +26,22 @@ struct SettingsView: View {
                 // Identity cards
                 VStack(spacing: 16) {
                     identityCard(
-                        person: .branch,
-                        emoji: "🌿",
-                        name: "Branch",
-                        subtitle: "Elisa"
+                        person: .elisa,
+                        emoji: "🌸",
+                        name: "Elisa",
+                        subtitle: ""
                     )
                     identityCard(
-                        person: .hummingbird,
-                        emoji: "🕊️",
-                        name: "Hummingbird",
-                        subtitle: "Cathy"
+                        person: .mom,
+                        emoji: "🌷",
+                        name: "Mom",
+                        subtitle: ""
+                    )
+                    identityCard(
+                        person: .sister,
+                        emoji: "🌼",
+                        name: "Sister",
+                        subtitle: ""
                     )
                 }
                 .padding(.horizontal, 24)
@@ -53,7 +59,7 @@ struct SettingsView: View {
         }
     }
 
-    private func identityCard(person: SunzzariPerson, emoji: String, name: String, subtitle: String) -> some View {
+    private func identityCard(person: MiraclesPerson, emoji: String, name: String, subtitle: String) -> some View {
         let isSelected = selected == person
 
         return Button {

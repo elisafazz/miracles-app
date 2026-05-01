@@ -31,4 +31,7 @@ Package.resolved
 Pods/
 
 # Secrets — never commit
+# Belt-and-suspenders: covers BOTH the pre-rename (Sunzzari/) and post-rename (Miracles/)
+# source folder paths so the rule survives Phase 1.5 Step 8 Xcode project rename.
 Sunzzari/Config/Secrets.swift
+Miracles/Config/Secrets.swift

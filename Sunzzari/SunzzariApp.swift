@@ -82,7 +82,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             await NotificationService.shared.scheduleWeeklyBestOfPrompt()
             // Clear any stale midnight trigger notifications left from previous builds
             let pending = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            let stale = pending.filter { $0.identifier.hasPrefix("sunzzari-midnight-") }.map(\.identifier)
+            let stale = pending.filter { $0.identifier.hasPrefix("miracles-midnight-") }.map(\.identifier)
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: stale)
         }
         return true
@@ -110,7 +110,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         // Increment badge for remote pushes (local notifications set their own badge)
         let id = notification.request.identifier
-        if !id.hasPrefix("sunzzari-boop-") && !id.hasPrefix("sunzzari-status-") {
+        if !id.hasPrefix("miracles-boop-") && !id.hasPrefix("miracles-status-") {
             let current = UIApplication.shared.applicationIconBadgeNumber
             UNUserNotificationCenter.current().setBadgeCount(current + 1)
         }

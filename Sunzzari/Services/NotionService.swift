@@ -34,6 +34,7 @@ final class NotionService: @unchecked Sendable {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     }
 
+    // TODO(miracles-phase-1.5): Rename "sunzzari_" prefix to "miracles_" during the codebase Sunzzari->Miracles sweep. App sandbox isolates this so it isn't a correctness bug, but it's misleading for future maintainers.
     private func saveToDisk(_ data: Data, name: String) {
         let url = diskCacheDir.appendingPathComponent("sunzzari_\(name).json")
         try? data.write(to: url, options: .atomic)
@@ -83,6 +84,8 @@ final class NotionService: @unchecked Sendable {
     }
 
     private var headers: [String: String] {
+        // SECURITY: Authorization carries a bearer token. Never log this dictionary or the
+        // URLRequest that includes it (no `print(request)`, no `os_log("\(req)")`).
         [
             "Authorization":   "Bearer \(Constants.Notion.token)",
             "Notion-Version":  Constants.Notion.version,
@@ -229,6 +232,7 @@ final class NotionService: @unchecked Sendable {
 
     /// Fetches the cover image URL for a Notion page or database.
     /// Tries GET /pages, GET /databases, then POST /search as a last resort.
+    // TODO(miracles-phase-1.5): no negative cache. If a DB legitimately has no cover, every call retries 3 network round-trips. Cache the nil result with TTL.
     func fetchDatabaseCover(id: String) async throws -> String? {
         func extractCover(_ json: [String: Any]) -> String? {
             guard let cover = json["cover"] as? [String: Any] else { return nil }
@@ -245,6 +249,7 @@ final class NotionService: @unchecked Sendable {
             guard let url = URL(string: "\(baseURL)/\(endpoint)") else { return (nil, 0) }
             var req = URLRequest(url: url)
             req.httpMethod = "GET"
+            req.timeoutInterval = 10
             headers.forEach { req.setValue($1, forHTTPHeaderField: $0) }
             guard let (data, response) = try? await URLSession.shared.data(for: req),
                   let http = response as? HTTPURLResponse else { return (nil, 0) }
@@ -265,9 +270,10 @@ final class NotionService: @unchecked Sendable {
         // 3. Search by ID — try pages first (most common for this app's use),
         //    then databases. Using a hardcoded "database" filter here was a bug:
         //    it excluded page objects entirely, which is what the 3 Hub cover IDs are.
-        let searchURL = URL(string: "\(baseURL)/search")!
+        guard let searchURL = URL(string: "\(baseURL)/search") else { return nil }
         var searchReq = URLRequest(url: searchURL)
         searchReq.httpMethod = "POST"
+        searchReq.timeoutInterval = 10
         headers.forEach { searchReq.setValue($1, forHTTPHeaderField: $0) }
         searchReq.httpBody = try? JSONSerialization.data(withJSONObject: [
             "filter": ["value": "page", "property": "object"]
@@ -462,15 +468,20 @@ final class NotionService: @unchecked Sendable {
     private func queryDatabase(id: String, sorts: [[String: Any]], filter: [String: Any]? = nil) async throws -> Data {
         var allResults: [[String: Any]] = []
         var startCursor: String? = nil
+        // Defense-in-depth: cap accumulator to prevent OOM on runaway DB.
+        let maxRows = 10_000
 
         repeat {
             var body: [String: Any] = ["sorts": sorts, "page_size": 100]
             if let filter { body["filter"] = filter }
             if let cursor = startCursor { body["start_cursor"] = cursor }
 
-            let url = URL(string: "\(baseURL)/databases/\(id)/query")!
+            guard let url = URL(string: "\(baseURL)/databases/\(id)/query") else {
+                throw NotionError.badURL
+            }
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
+            request.timeoutInterval = 10
             headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -479,9 +490,13 @@ final class NotionService: @unchecked Sendable {
                 throw NotionError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
             }
 
+            // Fail loud on mid-pagination parse error rather than returning silent partial data.
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let results = json["results"] as? [[String: Any]] else { break }
+                  let results = json["results"] as? [[String: Any]] else {
+                throw NotionError.parseError
+            }
             allResults.append(contentsOf: results)
+            if allResults.count > maxRows { throw NotionError.tooManyRows(maxRows) }
 
             let hasMore = json["has_more"] as? Bool ?? false
             startCursor = hasMore ? json["next_cursor"] as? String : nil
@@ -491,9 +506,10 @@ final class NotionService: @unchecked Sendable {
     }
 
     private func createPage(body: [String: Any]) async throws {
-        let url = URL(string: "\(baseURL)/pages")!
+        guard let url = URL(string: "\(baseURL)/pages") else { throw NotionError.badURL }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 10
         headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -504,9 +520,10 @@ final class NotionService: @unchecked Sendable {
     }
 
     private func updatePage(id: String, body: [String: Any]) async throws {
-        let url = URL(string: "\(baseURL)/pages/\(id)")!
+        guard let url = URL(string: "\(baseURL)/pages/\(id)") else { throw NotionError.badURL }
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
+        request.timeoutInterval = 10
         headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
@@ -522,9 +539,12 @@ final class NotionService: @unchecked Sendable {
         if !force, let cached = infoCache, Date().timeIntervalSince(cached.at) < 300 {
             return cached.entries
         }
-        let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.sunzzariInfoDBID)/query")!
+        guard let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.sunzzariInfoDBID)/query") else {
+            throw NotionError.badURL
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 10
         headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
         request.httpBody = try JSONSerialization.data(withJSONObject: [:])
         let (data, _) = try await URLSession.shared.data(for: request)
@@ -580,9 +600,10 @@ final class NotionService: @unchecked Sendable {
         repeat {
             var urlStr = "\(baseURL)/blocks/\(blockID)/children?page_size=100"
             if let c = cursor { urlStr += "&start_cursor=\(c)" }
-            let url = URL(string: urlStr)!
+            guard let url = URL(string: urlStr) else { throw NotionError.badURL }
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
+            request.timeoutInterval = 10
             headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
             let (data, _) = try await URLSession.shared.data(for: request)
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
@@ -626,6 +647,7 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Private: Parsers
 
+    // TODO(miracles-phase-1.5): every parser below silently `compactMap`s past malformed rows. A row with missing required fields disappears with no log, no UI banner, no count mismatch warning. Add os_log warnings + a "skipped N rows" surface so integration drift is loud (Fail Loud rule).
     private func parseDinosaurs(from data: Data) -> [DinosaurPhoto] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
@@ -759,6 +781,7 @@ final class NotionService: @unchecked Sendable {
                   let periodStart = extractDate(from: props["Period Start"]) else { return nil }
             let personStr = extractSelect(from: props["Person"]) ?? "Elisa"
             let avgCycle = (props["Avg Cycle"] as? [String: Any])?["number"] as? Int ?? 28
+            // TODO(miracles-phase-1.5): silently defaulting unknown person -> .elisa misattributes data. Add os_log warning + decide whether to drop the row instead.
             return CycleEntry(
                 id:            id,
                 periodStart:   periodStart,
@@ -791,6 +814,7 @@ final class NotionService: @unchecked Sendable {
             let personStr = extractSelect(from: props["Person"])     ?? "Elisa"
             let freqStr   = extractSelect(from: props["Frequency"])  ?? "Monthly"
 
+            // TODO(miracles-phase-1.5): same silent .elisa fallback as parseCycleEntries. Add logging + drop-row policy.
             return CreditEntry(
                 id:            id,
                 credit:        extractTitle(from: props["Credit"]) ?? "Untitled",
@@ -900,6 +924,10 @@ final class NotionService: @unchecked Sendable {
     private func dateProp(_ date: Date) -> [String: Any] {
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd"
+        // Pin to UTC so a "today" written at 11:30PM PDT does not round-trip as a different
+        // date when read back in another timezone. Notion treats date-only strings as UTC.
+        fmt.timeZone = TimeZone(identifier: "UTC")
+        fmt.locale = Locale(identifier: "en_US_POSIX")
         return ["date": ["start": fmt.string(from: date)]]
     }
 
@@ -920,9 +948,19 @@ final class NotionService: @unchecked Sendable {
     private func extractDate(from prop: Any?) -> Date? {
         guard let dateStr = (prop as? [String: Any]).flatMap({ ($0["date"] as? [String: Any])?["start"] as? String })
         else { return nil }
-        let fmtFull = DateFormatter(); fmtFull.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        let fmtDate = DateFormatter(); fmtDate.dateFormat = "yyyy-MM-dd"
-        return fmtFull.date(from: dateStr) ?? fmtDate.date(from: dateStr)
+        // ISO8601DateFormatter with both options handles fractional and non-fractional
+        // RFC 3339 timestamps that DateFormatter's strict format strings dropped silently.
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: dateStr) { return d }
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: dateStr) { return d }
+        // Date-only fallback ("yyyy-MM-dd"). Pin UTC for consistency with dateProp writes.
+        let fmtDate = DateFormatter()
+        fmtDate.dateFormat = "yyyy-MM-dd"
+        fmtDate.timeZone = TimeZone(identifier: "UTC")
+        fmtDate.locale = Locale(identifier: "en_US_POSIX")
+        return fmtDate.date(from: dateStr)
     }
 
     private func extractSelect(from prop: Any?) -> String? {
@@ -938,9 +976,16 @@ final class NotionService: @unchecked Sendable {
         guard let formula = (prop as? [String: Any])?["formula"] as? [String: Any],
               let dateObj = formula["date"] as? [String: Any],
               let start = dateObj["start"] as? String else { return nil }
-        let fmtFull = DateFormatter(); fmtFull.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        let fmtDate = DateFormatter(); fmtDate.dateFormat = "yyyy-MM-dd"
-        return fmtFull.date(from: start) ?? fmtDate.date(from: start)
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: start) { return d }
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: start) { return d }
+        let fmtDate = DateFormatter()
+        fmtDate.dateFormat = "yyyy-MM-dd"
+        fmtDate.timeZone = TimeZone(identifier: "UTC")
+        fmtDate.locale = Locale(identifier: "en_US_POSIX")
+        return fmtDate.date(from: start)
     }
 
     private func extractFormulaNumber(from prop: Any?) -> Int? {
@@ -994,16 +1039,19 @@ final class NotionService: @unchecked Sendable {
     private func parseThoughts(from data: Data) -> [ThoughtEntry] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        let fmtFull = DateFormatter(); fmtFull.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        let fmtAlt  = DateFormatter(); fmtAlt.dateFormat  = "yyyy-MM-dd'T'HH:mm:ssZ"
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let isoNoFrac = ISO8601DateFormatter()
+        isoNoFrac.formatOptions = [.withInternetDateTime]
         return results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             let createdStr = page["created_time"] as? String ?? ""
-            let date = fmtFull.date(from: createdStr) ?? fmtAlt.date(from: createdStr) ?? Date()
+            let date = iso.date(from: createdStr) ?? isoNoFrac.date(from: createdStr) ?? Date()
             return ThoughtEntry(
                 id:      id,
                 content: extractTitle(from: props["Entry"]) ?? "",
+                // TODO(miracles-phase-1.5): "Hummingbird" is a Sunzzari-specific default that survived the fork. For 3-person Miracles, drop the default or make it nil and have UI render "Unknown".
                 author:  extractSelect(from: props["Author"]) ?? "Hummingbird",
                 date:    date
             )
@@ -1012,8 +1060,16 @@ final class NotionService: @unchecked Sendable {
 
     enum NotionError: LocalizedError {
         case httpError(Int)
+        case badURL
+        case parseError
+        case tooManyRows(Int)
         var errorDescription: String? {
-            switch self { case .httpError(let code): return "Notion API error: HTTP \(code)" }
+            switch self {
+            case .httpError(let code): return "Notion API error: HTTP \(code)"
+            case .badURL:              return "Notion API error: malformed URL"
+            case .parseError:          return "Notion API error: response parse failed"
+            case .tooManyRows(let n):  return "Notion API error: query exceeded \(n) rows"
+            }
         }
     }
 }

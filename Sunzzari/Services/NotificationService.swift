@@ -37,7 +37,7 @@ final class NotificationService: @unchecked Sendable {
     func sendTestNotification() async {
         let center = UNUserNotificationCenter.current()
         let content = UNMutableNotificationContent()
-        content.title = "Today in Sunzzari"
+        content.title = "Today in Miracles"
         content.body  = "✨ Met at Cliffs of ID — 2025"
         content.sound = .default
 
@@ -77,7 +77,7 @@ final class NotificationService: @unchecked Sendable {
 
             let trigger    = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
             let content    = UNMutableNotificationContent()
-            content.title  = "Today in Sunzzari"
+            content.title  = "Today in Miracles"
             content.body   = "\(entry.category.emoji) \(entry.entry) — \(entry.year)"
             content.sound  = .default
 

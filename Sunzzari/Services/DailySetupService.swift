@@ -113,7 +113,7 @@ final class DailySetupService: @unchecked Sendable {
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
         let content       = UNMutableNotificationContent()
-        content.title     = "Today in Sunzzari"
+        content.title     = "Today in Miracles"
         content.body      = "\(entry.category.emoji) \(entry.entry) — \(entry.year)"
         content.sound     = .default
 

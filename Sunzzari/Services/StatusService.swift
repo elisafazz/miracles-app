@@ -150,6 +150,7 @@ final class StatusService: @unchecked Sendable {
     func storeDeviceToken(_ token: String) async {
         UserDefaults.standard.set(token, forKey: pendingTokenKey)
         guard AppIdentity.current != nil else { return }
+        // TODO(miracles-phase-1.5): isBranch is 2-person — Mom and Sister will collide on hummingbirdPageID. Replace with MiraclesPerson page-id lookup.
         let ownPageID = AppIdentity.isBranch
             ? Constants.Status.branchPageID
             : Constants.Status.hummingbirdPageID
@@ -166,6 +167,7 @@ final class StatusService: @unchecked Sendable {
         guard AppIdentity.current != nil else { return }
         guard let token = UserDefaults.standard.string(forKey: pendingTokenKey),
               !token.isEmpty else { return }
+        // TODO(miracles-phase-1.5): same 2-vs-3 collision as storeDeviceToken — fix together.
         let ownPageID = AppIdentity.isBranch
             ? Constants.Status.branchPageID
             : Constants.Status.hummingbirdPageID
@@ -179,6 +181,7 @@ final class StatusService: @unchecked Sendable {
     /// Send an APNs push to the partner's device via the Vercel backend.
     /// Fetches the partner's DeviceToken from Notion, then POSTs to the push endpoint.
     func sendPush(title: String, body: String) async {
+        // TODO(miracles-phase-1.5): "partner" is 2-person; for 3-person Miracles this needs to fan out to the other 2 device tokens, not pick one "partner".
         let partnerPageID = AppIdentity.isBranch
             ? Constants.Status.hummingbirdPageID
             : Constants.Status.branchPageID
@@ -189,6 +192,7 @@ final class StatusService: @unchecked Sendable {
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // TODO(miracles-phase-5): miracles-backend may rename this header to X-Miracles-Secret. Coordinate with backend repo before deploy.
         req.setValue(Constants.Status.pushSecret, forHTTPHeaderField: "X-Sunzzari-Secret")
         let payload: [String: String] = ["title": title, "body": body, "deviceToken": token]
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
@@ -214,6 +218,7 @@ final class StatusService: @unchecked Sendable {
     /// Format stored in TodayPick property: "YYYY-MM-DD:entryID"
     /// Returns the entryID only if the stored date matches today's dateStr.
     func fetchTodayPick(for dateStr: String) async -> String? {
+        // TODO(miracles-phase-1.5): hardcoded to hummingbirdPageID — for 3-person Miracles, decide which page is the "shared today pick" anchor (or move to a dedicated shared page).
         guard let url = URL(string: "\(notionBase)/pages/\(Constants.Status.hummingbirdPageID)") else { return nil }
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
@@ -294,7 +299,9 @@ final class StatusService: @unchecked Sendable {
         guard lastCheck > 0 else { return }
         let since = max(lastCheck, now - 3600)
         guard let url = URL(string: "\(ntfyBase)/\(Constants.Status.ntfyTopic)/json?since=\(since)") else { return }
-        guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+        var pollReq = URLRequest(url: url)
+        pollReq.timeoutInterval = 10
+        guard let (data, _) = try? await URLSession.shared.data(for: pollReq) else { return }
 
         let lines = String(data: data, encoding: .utf8)?
             .components(separatedBy: "\n")

@@ -60,7 +60,9 @@ final class BoopService: @unchecked Sendable {
         // Cap lookback to 1 hour to avoid replaying old boops
         let since = max(lastCheck, now - 3600)
         guard let url = URL(string: "\(baseURL)/\(topic)/json?since=\(since)") else { return }
-        guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+        var pollReq = URLRequest(url: url)
+        pollReq.timeoutInterval = 10
+        guard let (data, _) = try? await URLSession.shared.data(for: pollReq) else { return }
 
         let lines = String(data: data, encoding: .utf8)?
             .components(separatedBy: "\n")

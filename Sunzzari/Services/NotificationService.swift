@@ -26,7 +26,7 @@ final class NotificationService: @unchecked Sendable {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let request = UNNotificationRequest(
-            identifier: "sunzzari-weekly-bestof",
+            identifier: "miracles-weekly-bestof",
             content: content,
             trigger: trigger
         )
@@ -43,7 +43,7 @@ final class NotificationService: @unchecked Sendable {
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
         let request = UNNotificationRequest(
-            identifier: "sunzzari-test-\(Date().timeIntervalSince1970)",
+            identifier: "miracles-test-\(Date().timeIntervalSince1970)",
             content: content,
             trigger: trigger
         )
@@ -59,7 +59,7 @@ final class NotificationService: @unchecked Sendable {
         // Clear existing 30-day schedule
         let pending  = await center.pendingNotificationRequests()
         let toRemove = pending
-            .filter { $0.identifier.hasPrefix("sunzzari-otd-") || $0.identifier.hasPrefix("sunzzari-fallback-") }
+            .filter { $0.identifier.hasPrefix("miracles-otd-") || $0.identifier.hasPrefix("miracles-fallback-") }
             .map(\.identifier)
         center.removePendingNotificationRequests(withIdentifiers: toRemove)
 
@@ -83,7 +83,7 @@ final class NotificationService: @unchecked Sendable {
 
             let dateKey = DailySetupService.shared.dateString(for: date)
             let request = UNNotificationRequest(
-                identifier: "sunzzari-fallback-\(dateKey)",
+                identifier: "miracles-fallback-\(dateKey)",
                 content:    content,
                 trigger:    trigger
             )

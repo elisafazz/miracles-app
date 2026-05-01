@@ -83,7 +83,7 @@ final class BoopService: @unchecked Sendable {
             content.sound = .default
             content.badge = NSNumber(value: currentBadge + 1)
             let req = UNNotificationRequest(
-                identifier: "sunzzari-boop-\(event.id)",
+                identifier: "miracles-boop-\(event.id)",
                 content: content,
                 trigger: nil // deliver immediately
             )

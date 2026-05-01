@@ -109,7 +109,7 @@ final class DailySetupService: @unchecked Sendable {
         guard let fireTime = cal.date(from: comps), fireTime > Date() else { return }
 
         let center     = UNUserNotificationCenter.current()
-        let identifier = "sunzzari-fallback-\(dateString(for: date))"
+        let identifier = "miracles-fallback-\(dateString(for: date))"
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
 
         let content       = UNMutableNotificationContent()

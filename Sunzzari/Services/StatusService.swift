@@ -320,7 +320,7 @@ final class StatusService: @unchecked Sendable {
             content.sound = .default
             content.badge = NSNumber(value: currentBadge + 1)
             let req = UNNotificationRequest(
-                identifier: "sunzzari-status-\(evID)",
+                identifier: "miracles-status-\(evID)",
                 content: content,
                 trigger: nil
             )

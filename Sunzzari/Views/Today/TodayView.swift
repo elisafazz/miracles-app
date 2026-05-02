@@ -1,14 +1,14 @@
 import SwiftUI
 import UIKit
 
-// 6 one-tap boops elevated from BoopView presets (user-selected 2026-04-19)
+// Miracles boop presets (6 total, defined 2026-04-30 by Elisa)
 private let homeBoops: [String] = [
-    "HUMMINGBIRD NEEDS A BRANCH 🌿",
-    "Coming to rub your butt 🍑",
-    "poop 💩",
-    "🤘",
-    "Miss you! 🦕",
-    "Come cuddle me 🫶",
+    "SUGALEE AND LA",
+    "haiiiiiiii",
+    "i do love you",
+    "have a lovely day",
+    "dump 💩",
+    "need a glass of wine",
 ]
 
 struct TodayView: View {

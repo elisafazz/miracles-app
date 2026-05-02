@@ -15,34 +15,34 @@ struct ContentView: View {
                     }
                     .tag(0)
 
-                ThoughtActionView()
-                    .tabItem {
-                        Label("Thoughts", systemImage: "lightbulb.fill")
-                    }
-                    .tag(1)
-
-                StatusView()
-                    .tabItem {
-                        Label("Status", systemImage: "bolt.horizontal.circle.fill")
-                    }
-                    .tag(2)
-
                 HubView()
                     .tabItem {
                         Label("Hub", systemImage: "square.grid.2x2.fill")
                     }
+                    .tag(1)
+
+                BestOfView()
+                    .tabItem {
+                        Label("Best Of", systemImage: "star.fill")
+                    }
+                    .tag(2)
+
+                SearchView()
+                    .tabItem {
+                        Label("Search", systemImage: "magnifyingglass")
+                    }
                     .tag(3)
 
-                UtilityView()
+                SettingsView(onComplete: {})
                     .tabItem {
-                        Label("More", systemImage: "ellipsis.circle.fill")
+                        Label("Settings", systemImage: "gearshape.fill")
                     }
                     .tag(4)
             }
             .tint(.sunAccent)
             .fontDesign(.serif)
 
-            // Warm ambient glow — two-point radial system matching travel map body::before
+            // Warm ambient glow — two-point radial system
             GeometryReader { geo in
                 ZStack {
                     RadialGradient(
@@ -90,9 +90,6 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 Task {
-                    // Sync badge to notifications still in iOS Notification Center.
-                    // Replaces the previous setBadgeCount(0) which wiped the count
-                    // every time the app opened, so users never saw it accumulate.
                     let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
                     UNUserNotificationCenter.current().setBadgeCount(delivered.count)
                     await BoopService.shared.checkForBoops()

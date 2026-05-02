@@ -12,12 +12,12 @@ struct HubView: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             NavigationLink(destination: RestaurantHubView()) {
-                                HubCardView(title: "Restaurants", subtitle: "My Guide", assetName: "hubRestaurants")
+                                HubCardView(title: "Restaurants", subtitle: "Our Favorites", assetName: "hubRestaurants")
                             }
                             .buttonStyle(.plain)
 
                             NavigationLink(destination: WineHubView()) {
-                                HubCardView(title: "Wine", subtitle: "My Collection", assetName: "hubWine")
+                                HubCardView(title: "Wine", subtitle: "Our Collection", assetName: "hubWine")
                             }
                             .buttonStyle(.plain)
 
@@ -32,7 +32,7 @@ struct HubView: View {
                             .buttonStyle(.plain)
 
                             NavigationLink(destination: GalleryView()) {
-                                HubCardView(title: "Gallery", subtitle: "Our Memories", symbolName: "photo.stack.fill")
+                                HubCardView(title: "Gallery", subtitle: "Our Photos", symbolName: "photo.stack.fill")
                             }
                             .buttonStyle(.plain)
                         }

@@ -14,7 +14,7 @@ enum Constants {
     enum Notion {
         static let token        = Secrets.Notion.token
         // TODO Phase 2: replace with Miracles Notion DB IDs from notion-db-scaffold.md
-        static let dinosaursDBID = "00000000-0000-0000-0000-000000000000"
+        static let galleryDBID = "00000000-0000-0000-0000-000000000000"
         static let memoriesDBID  = "00000000-0000-0000-0000-000000000000"
         static let bestOfDBID       = "00000000-0000-0000-0000-000000000000"
         static let restaurantsDBID  = "00000000-0000-0000-0000-000000000000"

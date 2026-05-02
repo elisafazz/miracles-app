@@ -100,7 +100,7 @@ final class NotionService: @unchecked Sendable {
         }
         do {
             let data = try await queryDatabase(
-                id: Constants.Notion.dinosaursDBID,
+                id: Constants.Notion.galleryDBID,
                 sorts: [["property": "Date Added", "direction": "descending"]]
             )
             let photos = parsePhotos(from: data)
@@ -840,7 +840,7 @@ final class NotionService: @unchecked Sendable {
             "Date Added": dateProp(photo.dateAdded ?? Date())
         ]
         if let url = photo.cloudinaryURL { props["Cloudinary URL"] = ["url": url] }
-        return ["parent": ["database_id": Constants.Notion.dinosaursDBID], "properties": props]
+        return ["parent": ["database_id": Constants.Notion.galleryDBID], "properties": props]
     }
 
     private func memoryPayload(_ memory: Memory) -> [String: Any] {

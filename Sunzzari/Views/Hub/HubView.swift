@@ -35,6 +35,11 @@ struct HubView: View {
                                 HubCardView(title: "Gallery", subtitle: "Our Photos", symbolName: "photo.stack.fill")
                             }
                             .buttonStyle(.plain)
+
+                            NavigationLink(destination: OnThisDayView()) {
+                                HubCardView(title: "On This Day", subtitle: "Family Memories", symbolName: "calendar.badge.clock")
+                            }
+                            .buttonStyle(.plain)
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 20)

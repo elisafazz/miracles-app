@@ -4,12 +4,12 @@ import UIKit
 final class AnthropicService: @unchecked Sendable {
     static let shared = AnthropicService()
 
-    private let endpoint = URL(string: "https://sunzzari-backend.vercel.app/api/analyze")!
+    private let endpoint = URL(string: Constants.Status.analyzeEndpoint)!
 
     // MARK: - Wine Picker (existing)
 
     private let winePickerSystemPrompt = """
-    You are a wine sommelier helping Elisa and Cathy select a wine. Their profile:
+    You are a wine sommelier helping Elisa select a wine. Her profile:
 
     LOVES: Old World structured reds (Roussillon, Tuscany, Southern Rhône) — bright acidity, mineral backbone, dark cherry, herbal notes, moderate oak. Favorite wine: Comme Avant – Domaine Modat. Italian Sangiovese (Chianti, Chianti Classico). Bold California reds — Napa/Paso Robles Cabernet, Zinfandel (Booker Fracture, Stag's Leap Artemis, Justin Isosceles, Pride Mountain, Saldo Zin). California Pinot Noir. Crisp dry whites (mineral, citrus, stone fruit). Dry rosé. Champagne/dry sparkling.
 
@@ -230,6 +230,7 @@ final class AnthropicService: @unchecked Sendable {
     private func sendRequest(_ body: [String: Any]) async throws -> String {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        // TODO(miracles-phase-5): update header name to x-miracles-secret when miracles-backend is created
         request.setValue(Constants.Status.pushSecret, forHTTPHeaderField: "x-sunzzari-secret")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

@@ -8,8 +8,8 @@ final class NotificationService: @unchecked Sendable {
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
     }
 
-    /// Schedules a repeating Sunday 8pm local-time notification prompting both
-    /// Elisa and Cathy to log weekly Best Of entries. Tapping the notification
+    /// Schedules a repeating Sunday 8pm local-time notification prompting
+    /// Elisa to log weekly Best Of entries. Tapping the notification
     /// deep-links into WeeklyBestOfInputView via AppDelegate's didReceive handler.
     /// Safe to call on every app launch — UNUserNotificationCenter dedupes on identifier.
     func scheduleWeeklyBestOfPrompt() async {

@@ -4,7 +4,7 @@ struct AsyncImageView: View {
     let urlString: String?
     var cornerRadius: CGFloat = 12
     // When set, Cloudinary URLs are rewritten to request a thumbnail of this width.
-    // Full-res viewers (e.g. DinoDetailView) should leave this nil.
+    // Full-res viewers (e.g. PhotoDetailView) should leave this nil.
     var thumbnailWidth: Int? = nil
 
     var body: some View {

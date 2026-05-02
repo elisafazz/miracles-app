@@ -65,7 +65,9 @@ enum Constants {
         static let momPageID    = "00000000-0000-0000-0000-000000000000"
         static let sisterPageID = "00000000-0000-0000-0000-000000000000"
         /// APNs push backend
-        static let pushEndpoint = "https://miracles-backend.vercel.app/api/push"
-        static let pushSecret   = Secrets.Push.secret
+        static let pushEndpoint    = "https://miracles-backend.vercel.app/api/push"
+        // TODO(miracles-phase-5): update to miracles-backend once backend is created
+        static let analyzeEndpoint = "https://miracles-backend.vercel.app/api/analyze"
+        static let pushSecret      = Secrets.Push.secret
     }
 }

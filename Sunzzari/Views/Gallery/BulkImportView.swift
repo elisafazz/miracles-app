@@ -2,7 +2,7 @@ import SwiftUI
 import PhotosUI
 
 struct BulkImportView: View {
-    let onComplete: ([DinosaurPhoto]) -> Void
+    let onComplete: ([FamilyPhoto]) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var selectedItems: [PhotosPickerItem] = []
@@ -28,7 +28,7 @@ struct BulkImportView: View {
                                 .font(.system(.title2, design: .serif, weight: .bold))
                                 .foregroundStyle(Color.sunText)
 
-                            Text("Choose as many dino photos as you want.\nThey'll all upload automatically.")
+                            Text("Choose as many photos as you want.\nThey'll all upload automatically.")
                                 .font(.system(.subheadline, design: .serif))
                                 .foregroundStyle(Color.sunSecondary)
                                 .multilineTextAlignment(.center)
@@ -114,7 +114,7 @@ struct BulkImportView: View {
                                 onComplete(uploaded)
                                 dismiss()
                             } label: {
-                                Text("Done — View Gallery")
+                                Text("Done - View Gallery")
                                     .font(.system(.headline, design: .serif))
                                     .foregroundStyle(Color.sunBackground)
                                     .frame(maxWidth: .infinity)
@@ -180,15 +180,15 @@ struct BulkImportView: View {
 
         do {
             let url = try await CloudinaryService.shared.upload(image: image)
-            let photo = DinosaurPhoto(
+            let photo = FamilyPhoto(
                 id:            UUID().uuidString,
-                name:          "Dino \(index + 1)",
+                name:          "Photo \(index + 1)",
                 cloudinaryURL: url,
                 dateAdded:     Date(),
                 isFavorite:    false,
                 tags:          []
             )
-            try await NotionService.shared.createDinosaur(photo)
+            try await NotionService.shared.createPhoto(photo)
             await MainActor.run {
                 uploadStates[index].status = .done
                 uploadStates[index].result = photo
@@ -204,7 +204,7 @@ struct BulkImportView: View {
 struct UploadState {
     let item: PhotosPickerItem
     var status: Status = .pending
-    var result: DinosaurPhoto? = nil
+    var result: FamilyPhoto? = nil
 
     enum Status: Equatable { case pending, uploading, done, failed }
 }

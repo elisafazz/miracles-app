@@ -1,12 +1,12 @@
 import SwiftUI
 import PhotosUI
 
-struct AddDinoView: View {
-    let onSave: (DinosaurPhoto) -> Void
+struct AddPhotoView: View {
+    let onSave: (FamilyPhoto) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
-    @State private var selectedTags: Set<DinosaurPhoto.Tag> = []
+    @State private var selectedTags: Set<FamilyPhoto.Tag> = []
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var isUploading = false
@@ -59,7 +59,7 @@ struct AddDinoView: View {
                             Label("Name", systemImage: "textformat")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
                                 .foregroundStyle(Color.sunSecondary)
-                            TextField("e.g. Dino at Sunset", text: $name)
+                            TextField("e.g. Mom's garden", text: $name)
                                 .padding()
                                 .background(Color.sunSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -72,7 +72,7 @@ struct AddDinoView: View {
                                 .font(.system(.caption, design: .serif, weight: .semibold))
                                 .foregroundStyle(Color.sunSecondary)
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                                ForEach(DinosaurPhoto.Tag.allCases, id: \.self) { tag in
+                                ForEach(FamilyPhoto.Tag.allCases, id: \.self) { tag in
                                     Button {
                                         if selectedTags.contains(tag) {
                                             selectedTags.remove(tag)
@@ -81,33 +81,30 @@ struct AddDinoView: View {
                                         }
                                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     } label: {
-                                        HStack(spacing: 6) {
-                                            Text(tag.emoji)
-                                            Text(tag.rawValue)
-                                                .font(.system(.subheadline, design: .serif, weight: .medium))
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            selectedTags.contains(tag)
-                                                ? Color(hex: tag.color).opacity(0.3)
-                                                : Color.sunSurface
-                                        )
-                                        .foregroundStyle(
-                                            selectedTags.contains(tag)
-                                                ? Color(hex: tag.color)
-                                                : Color.sunSecondary
-                                        )
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .strokeBorder(
-                                                    selectedTags.contains(tag)
-                                                        ? Color(hex: tag.color)
-                                                        : Color.clear,
-                                                    lineWidth: 1.5
-                                                )
-                                        )
+                                        Text(tag.rawValue)
+                                            .font(.system(.subheadline, design: .serif, weight: .medium))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 10)
+                                            .background(
+                                                selectedTags.contains(tag)
+                                                    ? Color(hex: tag.color).opacity(0.3)
+                                                    : Color.sunSurface
+                                            )
+                                            .foregroundStyle(
+                                                selectedTags.contains(tag)
+                                                    ? Color(hex: tag.color)
+                                                    : Color.sunSecondary
+                                            )
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .strokeBorder(
+                                                        selectedTags.contains(tag)
+                                                            ? Color(hex: tag.color)
+                                                            : Color.clear,
+                                                        lineWidth: 1.5
+                                                    )
+                                            )
                                     }
                                 }
                             }
@@ -128,7 +125,7 @@ struct AddDinoView: View {
                                 if isUploading {
                                     ProgressView().tint(.sunBackground)
                                 }
-                                Text(isUploading ? "Uploading..." : "Save Dino")
+                                Text(isUploading ? "Uploading..." : "Save Photo")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
@@ -142,7 +139,7 @@ struct AddDinoView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Dino")
+            .navigationTitle("New Photo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -163,7 +160,7 @@ struct AddDinoView: View {
 
         do {
             let url = try await CloudinaryService.shared.upload(image: image)
-            let photo = DinosaurPhoto(
+            let photo = FamilyPhoto(
                 id:            UUID().uuidString,
                 name:          name,
                 cloudinaryURL: url,
@@ -171,7 +168,7 @@ struct AddDinoView: View {
                 isFavorite:    false,
                 tags:          Array(selectedTags)
             )
-            try await NotionService.shared.createDinosaur(photo)
+            try await NotionService.shared.createPhoto(photo)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             onSave(photo)
             dismiss()

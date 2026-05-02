@@ -1,17 +1,17 @@
 import SwiftUI
 
 struct GalleryView: View {
-    @State private var photos: [DinosaurPhoto] = []
+    @State private var photos: [FamilyPhoto] = []
     @State private var isLoading = true
-    @State private var selectedPhoto: DinosaurPhoto?
-    @State private var showAddDino = false
+    @State private var selectedPhoto: FamilyPhoto?
+    @State private var showAddPhoto = false
     @State private var showBulkImport = false
     @State private var errorMessage: String?
     @State private var favoritesOnly = false
 
     private let columns = [GridItem(.flexible(), spacing: 4), GridItem(.flexible(), spacing: 4)]
 
-    private var displayPhotos: [DinosaurPhoto] {
+    private var displayPhotos: [FamilyPhoto] {
         let base = favoritesOnly ? photos.filter(\.isFavorite) : photos
         return base.filter(\.isFavorite) + base.filter { !$0.isFavorite }
     }
@@ -30,8 +30,8 @@ struct GalleryView: View {
                 } else if photos.isEmpty {
                     EmptyStateView(
                         systemImage: "photo.badge.plus",
-                        title: "No dinosaurs yet",
-                        subtitle: "Add your first dino photo to start the collection!"
+                        title: "No photos yet",
+                        subtitle: "Add your first photo to start the gallery!"
                     )
                 } else {
                     // Filter bar
@@ -99,7 +99,7 @@ struct GalleryView: View {
 
                     // Single add button
                     Button {
-                        showAddDino = true
+                        showAddPhoto = true
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(.title2, design: .serif, weight: .semibold))
@@ -116,14 +116,14 @@ struct GalleryView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $selectedPhoto) { photo in
-            DinoDetailView(photo: photo, onFavoriteToggle: { toggleFavorite($0) }, onEdit: { updated in
+            PhotoDetailView(photo: photo, onFavoriteToggle: { toggleFavorite($0) }, onEdit: { updated in
                 if let idx = photos.firstIndex(where: { $0.id == updated.id }) {
                     photos[idx] = updated
                 }
             })
         }
-        .sheet(isPresented: $showAddDino) {
-            AddDinoView { newPhoto in
+        .sheet(isPresented: $showAddPhoto) {
+            AddPhotoView { newPhoto in
                 photos.insert(newPhoto, at: 0)
             }
         }
@@ -142,11 +142,11 @@ struct GalleryView: View {
 
     private func loadPhotos(force: Bool = false) async {
         // Stale-while-revalidate: serve disk cache instantly, refresh in background
-        if !force, let cached = NotionService.shared.dinosaursDiskCache() {
+        if !force, let cached = NotionService.shared.photosDiskCache() {
             photos = cached
             isLoading = false
             do {
-                let fresh = try await NotionService.shared.fetchDinosaurs(force: true)
+                let fresh = try await NotionService.shared.fetchPhotos(force: true)
                 photos = fresh
             } catch is CancellationError {
             } catch let urlErr as URLError where urlErr.code == .cancelled {
@@ -157,7 +157,7 @@ struct GalleryView: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            photos = try await NotionService.shared.fetchDinosaurs(force: force)
+            photos = try await NotionService.shared.fetchPhotos(force: force)
         } catch is CancellationError {
             return
         } catch let urlErr as URLError where urlErr.code == .cancelled {
@@ -167,7 +167,7 @@ struct GalleryView: View {
         }
     }
 
-    private func toggleFavorite(_ photo: DinosaurPhoto) {
+    private func toggleFavorite(_ photo: FamilyPhoto) {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         guard let idx = photos.firstIndex(where: { $0.id == photo.id }) else { return }
         let newValue = !photos[idx].isFavorite
@@ -180,7 +180,7 @@ struct GalleryView: View {
 
 // MARK: - Gallery Cell
 private struct GalleryCell: View {
-    let photo: DinosaurPhoto
+    let photo: FamilyPhoto
     let onFavoriteTap: () -> Void
 
     var body: some View {

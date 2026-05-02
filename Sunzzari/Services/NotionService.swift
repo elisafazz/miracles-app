@@ -6,7 +6,7 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Memory cache
     private var bestOfCache: (entries: [BestOfEntry], at: Date)?
-    private var dinosaursCache: (photos: [DinosaurPhoto], at: Date)?
+    private var photosCache: (photos: [FamilyPhoto], at: Date)?
     private var memoriesCache: (memories: [Memory], at: Date)?
     private var restaurantsCache: (items: [Restaurant], at: Date)?
     private var winesCache: (items: [Wine], at: Date)?
@@ -18,7 +18,7 @@ final class NotionService: @unchecked Sendable {
     private let cacheTTL: TimeInterval = 300 // 5 minutes
 
     func invalidateBestOf() { bestOfCache = nil }
-    func invalidateDinosaurs() { dinosaursCache = nil }
+    func invalidatePhotos() { photosCache = nil }
     func invalidateMemories() { memoriesCache = nil }
     func invalidateRestaurants() { restaurantsCache = nil }
     func invalidateWines() { winesCache = nil }
@@ -46,8 +46,8 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Disk cache accessors (instant warm-start, no network)
 
-    func dinosaursDiskCache() -> [DinosaurPhoto]? {
-        loadFromDisk(name: "dinosaurs").map { parseDinosaurs(from: $0) }
+    func photosDiskCache() -> [FamilyPhoto]? {
+        loadFromDisk(name: "miracles_photos").map { parsePhotos(from: $0) }
     }
 
     func bestOfDiskCache() -> [BestOfEntry]? {
@@ -92,10 +92,10 @@ final class NotionService: @unchecked Sendable {
         ]
     }
 
-    // MARK: - Dinosaurs
+    // MARK: - Photos
 
-    func fetchDinosaurs(force: Bool = false) async throws -> [DinosaurPhoto] {
-        if !force, let cached = dinosaursCache, Date().timeIntervalSince(cached.at) < cacheTTL {
+    func fetchPhotos(force: Bool = false) async throws -> [FamilyPhoto] {
+        if !force, let cached = photosCache, Date().timeIntervalSince(cached.at) < cacheTTL {
             return cached.photos
         }
         do {
@@ -103,22 +103,22 @@ final class NotionService: @unchecked Sendable {
                 id: Constants.Notion.dinosaursDBID,
                 sorts: [["property": "Date Added", "direction": "descending"]]
             )
-            let photos = parseDinosaurs(from: data)
-            dinosaursCache = (photos, Date())
-            saveToDisk(data, name: "dinosaurs")
+            let photos = parsePhotos(from: data)
+            photosCache = (photos, Date())
+            saveToDisk(data, name: "miracles_photos")
             return photos
         } catch {
-            if let diskData = loadFromDisk(name: "dinosaurs") {
-                let photos = parseDinosaurs(from: diskData)
-                dinosaursCache = (photos, Date())
+            if let diskData = loadFromDisk(name: "miracles_photos") {
+                let photos = parsePhotos(from: diskData)
+                photosCache = (photos, Date())
                 return photos
             }
             throw error
         }
     }
 
-    func createDinosaur(_ photo: DinosaurPhoto) async throws {
-        try await createPage(body: dinosaurPayload(photo))
+    func createPhoto(_ photo: FamilyPhoto) async throws {
+        try await createPage(body: photoPayload(photo))
     }
 
     func toggleFavorite(pageID: String, isFavorite: Bool) async throws {
@@ -127,7 +127,7 @@ final class NotionService: @unchecked Sendable {
         ])
     }
 
-    func updateDinosaur(_ photo: DinosaurPhoto) async throws {
+    func updatePhoto(_ photo: FamilyPhoto) async throws {
         try await updatePage(id: photo.id, body: [
             "properties": [
                 "Name": titleProp(photo.name),
@@ -647,15 +647,15 @@ final class NotionService: @unchecked Sendable {
     // MARK: - Private: Parsers
 
     // TODO(miracles-phase-1.5): every parser below silently `compactMap`s past malformed rows. A row with missing required fields disappears with no log, no UI banner, no count mismatch warning. Add os_log warnings + a "skipped N rows" surface so integration drift is loud (Fail Loud rule).
-    private func parseDinosaurs(from data: Data) -> [DinosaurPhoto] {
+    private func parsePhotos(from data: Data) -> [FamilyPhoto] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
         return results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             let tagStrings = extractMultiSelect(from: props["Tags"])
-            let tags = tagStrings.compactMap { DinosaurPhoto.Tag(rawValue: $0) }
-            return DinosaurPhoto(
+            let tags = tagStrings.compactMap { FamilyPhoto.Tag(rawValue: $0) }
+            return FamilyPhoto(
                 id:            id,
                 name:          extractTitle(from: props["Name"]) ?? "Untitled",
                 cloudinaryURL: extractURL(from: props["Cloudinary URL"]),
@@ -832,7 +832,7 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Private: Payload builders
 
-    private func dinosaurPayload(_ photo: DinosaurPhoto) -> [String: Any] {
+    private func photoPayload(_ photo: FamilyPhoto) -> [String: Any] {
         var props: [String: Any] = [
             "Name":       titleProp(photo.name),
             "Favorite":   ["checkbox": photo.isFavorite],

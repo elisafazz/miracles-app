@@ -1,18 +1,18 @@
 import SwiftUI
 
-struct EditDinoView: View {
+struct EditPhotoView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let onSave: (DinosaurPhoto) -> Void
+    let onSave: (FamilyPhoto) -> Void
 
     @State private var name: String
-    @State private var selectedTags: Set<DinosaurPhoto.Tag>
+    @State private var selectedTags: Set<FamilyPhoto.Tag>
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    private let original: DinosaurPhoto
+    private let original: FamilyPhoto
 
-    init(photo: DinosaurPhoto, onSave: @escaping (DinosaurPhoto) -> Void) {
+    init(photo: FamilyPhoto, onSave: @escaping (FamilyPhoto) -> Void) {
         self.original = photo
         self.onSave = onSave
         _name         = State(initialValue: photo.name)
@@ -31,7 +31,7 @@ struct EditDinoView: View {
                             Label("Name", systemImage: "textformat")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
                                 .foregroundStyle(Color.sunSecondary)
-                            TextField("e.g. Dino at Sunset", text: $name)
+                            TextField("e.g. Mom's garden", text: $name)
                                 .padding()
                                 .background(Color.sunSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -43,38 +43,36 @@ struct EditDinoView: View {
                                 .font(.system(.caption, design: .serif, weight: .semibold))
                                 .foregroundStyle(Color.sunSecondary)
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                                ForEach(DinosaurPhoto.Tag.allCases, id: \.self) { tag in
+                                ForEach(FamilyPhoto.Tag.allCases, id: \.self) { tag in
                                     Button {
                                         if selectedTags.contains(tag) { selectedTags.remove(tag) }
                                         else { selectedTags.insert(tag) }
                                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     } label: {
-                                        HStack(spacing: 6) {
-                                            Text(tag.emoji)
-                                            Text(tag.rawValue).font(.system(.subheadline, design: .serif, weight: .medium))
-                                        }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            selectedTags.contains(tag)
-                                                ? Color(hex: tag.color).opacity(0.3)
-                                                : Color.sunSurface
-                                        )
-                                        .foregroundStyle(
-                                            selectedTags.contains(tag)
-                                                ? Color(hex: tag.color)
-                                                : Color.sunSecondary
-                                        )
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .strokeBorder(
-                                                    selectedTags.contains(tag)
-                                                        ? Color(hex: tag.color)
-                                                        : Color.clear,
-                                                    lineWidth: 1.5
-                                                )
-                                        )
+                                        Text(tag.rawValue)
+                                            .font(.system(.subheadline, design: .serif, weight: .medium))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 10)
+                                            .background(
+                                                selectedTags.contains(tag)
+                                                    ? Color(hex: tag.color).opacity(0.3)
+                                                    : Color.sunSurface
+                                            )
+                                            .foregroundStyle(
+                                                selectedTags.contains(tag)
+                                                    ? Color(hex: tag.color)
+                                                    : Color.sunSecondary
+                                            )
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .strokeBorder(
+                                                        selectedTags.contains(tag)
+                                                            ? Color(hex: tag.color)
+                                                            : Color.clear,
+                                                        lineWidth: 1.5
+                                                    )
+                                            )
                                     }
                                 }
                             }
@@ -103,7 +101,7 @@ struct EditDinoView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Edit Dino")
+            .navigationTitle("Edit Photo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -121,7 +119,7 @@ struct EditDinoView: View {
             var updated = original
             updated.name = name
             updated.tags = Array(selectedTags)
-            try await NotionService.shared.updateDinosaur(updated)
+            try await NotionService.shared.updatePhoto(updated)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             onSave(updated)
             dismiss()

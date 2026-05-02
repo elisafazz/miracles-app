@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct DinoDetailView: View {
-    let photo: DinosaurPhoto
-    let onFavoriteToggle: (DinosaurPhoto) -> Void
-    var onEdit: ((DinosaurPhoto) -> Void)? = nil
+struct PhotoDetailView: View {
+    let photo: FamilyPhoto
+    let onFavoriteToggle: (FamilyPhoto) -> Void
+    var onEdit: ((FamilyPhoto) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
-    @State private var showEditDino = false
+    @State private var showEditPhoto = false
     @State private var isLoadingShare = false
 
     var body: some View {
@@ -50,16 +50,13 @@ struct DinoDetailView: View {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 8) {
                                         ForEach(photo.tags, id: \.self) { tag in
-                                            HStack(spacing: 4) {
-                                                Text(tag.emoji)
-                                                Text(tag.rawValue)
-                                            }
-                                            .font(.system(.caption, design: .serif, weight: .semibold))
-                                            .foregroundStyle(Color(hex: tag.color))
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 5)
-                                            .background(Color(hex: tag.color).opacity(0.15))
-                                            .clipShape(Capsule())
+                                            Text(tag.rawValue)
+                                                .font(.system(.caption, design: .serif, weight: .semibold))
+                                                .foregroundStyle(Color(hex: tag.color))
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(Color(hex: tag.color).opacity(0.15))
+                                                .clipShape(Capsule())
                                         }
                                     }
                                 }
@@ -73,7 +70,7 @@ struct DinoDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        showEditDino = true
+                        showEditPhoto = true
                     } label: {
                         Image(systemName: "pencil")
                             .foregroundStyle(Color.sunAccent)
@@ -97,8 +94,8 @@ struct DinoDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showEditDino) {
-            EditDinoView(photo: photo) { updated in
+        .sheet(isPresented: $showEditPhoto) {
+            EditPhotoView(photo: photo) { updated in
                 onEdit?(updated)
                 dismiss()
             }

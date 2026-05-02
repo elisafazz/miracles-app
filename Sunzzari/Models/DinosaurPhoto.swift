@@ -1,6 +1,6 @@
 import Foundation
 
-struct DinosaurPhoto: Identifiable {
+struct FamilyPhoto: Identifiable {
     let id: String
     var name: String
     var cloudinaryURL: String?
@@ -9,26 +9,19 @@ struct DinosaurPhoto: Identifiable {
     var tags: [Tag]
 
     enum Tag: String, CaseIterable {
-        case cute     = "Cute"
-        case fierce   = "Fierce"
-        case silly    = "Silly"
-        case romantic = "Romantic"
+        case lovely    = "Lovely"
+        case funny     = "Funny"
+        case sweet     = "Sweet"
+        case cherished = "Cherished"
 
-        var emoji: String {
-            switch self {
-            case .cute:     return "🥰"
-            case .fierce:   return "🔥"
-            case .silly:    return "😂"
-            case .romantic: return "💛"
-            }
-        }
+        var emoji: String { "" }
 
         var color: String {
             switch self {
-            case .cute:     return "#FFB3C6"
-            case .fierce:   return "#FF6B6B"
-            case .silly:    return "#FFD93D"
-            case .romantic: return "#C77DFF"
+            case .lovely:    return "#FFB3C6"
+            case .funny:     return "#FFD93D"
+            case .sweet:     return "#FF9B7A"
+            case .cherished: return "#C77DFF"
             }
         }
     }

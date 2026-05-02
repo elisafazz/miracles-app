@@ -52,7 +52,7 @@ final class CloudinaryService: @unchecked Sendable {
         append("\(Constants.Cloudinary.uploadPreset)\(nl)")
 
         append("--\(boundary)\(nl)")
-        append("Content-Disposition: form-data; name=\"file\"; filename=\"dino.jpg\"\(nl)")
+        append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\(nl)")
         append("Content-Type: image/jpeg\(nl)\(nl)")
         body.append(imageData)
         append(nl)

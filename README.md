@@ -1,29 +1,33 @@
-# Sunzzari
+# Miracles
 
-Private iOS app for Elisa and Cathy. Built with SwiftUI, Notion API, and Cloudinary.
+Private iOS app for Elisa, her mom, and her sister. Built with SwiftUI, Notion API, and Cloudinary.
 
 ---
 
-## Workflow: Cathy edits, Elisa installs
-
-### Setup (one time)
+## Setup (one time)
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/elisafazz/sunzzari-app.git
-   cd sunzzari-app
+   git clone https://github.com/elisafazz/miracles-app.git
+   cd miracles-app
    ```
-2. Open `Sunzzari.xcodeproj` in Xcode
-3. All credentials are already in `Sunzzari/Config/Constants.swift` — no extra setup needed
+2. Create your local secrets file (gitignored, never committed):
+   ```bash
+   cp Sunzzari/Config/Secrets.template Sunzzari/Config/Secrets.swift
+   ```
+   Open `Sunzzari/Config/Secrets.swift` and fill in the real tokens. Ask Elisa if you don't have them.
+3. Open `Sunzzari.xcodeproj` in Xcode
 
-### Making changes
+---
 
-1. Pull latest before starting:
+## Making changes
+
+1. Pull latest before editing:
    ```bash
    git pull origin main
    ```
-2. Make your changes in Xcode or with Claude Code
-3. Build and test on your simulator or device (Cmd+R in Xcode)
+2. Make changes in Xcode or with Claude Code
+3. Build and test (Cmd+R in Xcode)
 4. Commit and push:
    ```bash
    git add .
@@ -31,15 +35,7 @@ Private iOS app for Elisa and Cathy. Built with SwiftUI, Notion API, and Cloudin
    git push origin main
    ```
 
-### Installing on Cathy's phone (Elisa's job)
-
-1. Pull latest:
-   ```bash
-   git pull origin main
-   ```
-2. Open `Sunzzari.xcodeproj` in Xcode
-3. Plug in Cathy's phone, select it as the build target
-4. Hit Cmd+R — Xcode builds and installs directly
+After pushing, Xcode Cloud builds automatically (~10-15 min) and delivers to TestFlight.
 
 ---
 
@@ -48,21 +44,24 @@ Private iOS app for Elisa and Cathy. Built with SwiftUI, Notion API, and Cloudin
 ```
 Sunzzari/
 ├── Config/
-│   ├── Constants.swift        — all tokens and DB IDs
-│   └── AppColors.swift        — color palette
-├── Models/                    — data models (DinosaurPhoto, Memory, BestOfEntry, etc.)
+│   ├── Constants.swift        — Notion DB IDs, ntfy topics, backend endpoints
+│   ├── AppColors.swift        — color palette
+│   └── AppIdentity.swift      — per-device identity (Elisa / Mom / Sister)
+├── Models/                    — data models (FamilyPhoto, Memory, BestOfEntry, etc.)
 ├── Services/
 │   ├── NotionService.swift    — all Notion API calls
+│   ├── BoopService.swift      — ntfy-based boop notifications
 │   ├── CloudinaryService.swift
 │   └── NotificationService.swift
 └── Views/
-    ├── Today/                 — landing tab (today's memories or Best Of fallback)
-    ├── Gallery/               — dinosaur photo gallery
+    ├── Today/                 — home tab (boops, memories, nudge)
+    ├── Hub/                   — hub tab (restaurants, wine, activities, travel, gallery, on this day)
+    ├── Gallery/               — family photo gallery
+    ├── OnThisDay/             — memories from this date in past years
     ├── BestOf/                — best of entries by year
-    ├── OnThisDay/             — memories
     ├── Search/                — universal search
-    ├── Travel/                — travel map link
-    ├── Info/                  — reference info from Notion
+    ├── Travel/                — trips and itineraries
+    ├── Settings/              — identity picker (Elisa / Mom / Sister)
     └── Shared/                — reusable components
 ```
 
@@ -71,9 +70,10 @@ Sunzzari/
 - SwiftUI, iOS 17+
 - Notion API (direct HTTP, embedded token)
 - Cloudinary (unsigned upload, CDN delivery)
-- iOS Local Notifications
-- No backend, no auth
+- ntfy.sh for boop notifications
+- APNs push via miracles-backend (Vercel)
+- No auth layer
 
 ## Credentials
 
-All in `Sunzzari/Config/Constants.swift`. This repo is private — do not make it public.
+All in `Sunzzari/Config/Constants.swift` (non-secret) and `Sunzzari/Config/Secrets.swift` (secret, gitignored). The Xcode Cloud build generates `Secrets.swift` automatically from environment variables set in App Store Connect.

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Xcode Cloud post-clone script
+# Xcode Cloud post-clone script for Miracles app.
 # Generates Secrets.swift from environment variables set in App Store Connect.
 # Required env vars: NOTION_TOKEN, PUSH_SECRET
 

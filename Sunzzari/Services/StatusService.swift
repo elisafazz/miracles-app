@@ -11,6 +11,11 @@ final class StatusService: @unchecked Sendable {
     private let ntfyBase   = "https://ntfy.sh"
     private let lastCheckKey = "miracles_status_last_check"
 
+    /// Stable anchor page for shared state (Today pick). Elisa is the primary
+    /// user and owns this page; Mom and Sister read/write it for the shared
+    /// daily pick coordination.
+    private var sharedAnchorPageID: String { Constants.Status.elisaPageID }
+
     private var notionHeaders: [String: String] {
         [
             "Authorization":  "Bearer \(Constants.Notion.token)",
@@ -26,104 +31,21 @@ final class StatusService: @unchecked Sendable {
         return String(raw.prefix(6))
     }
 
-    // MARK: - Fetch
+    // MARK: - Identity routing
 
-    func fetchBoth() async throws -> (elisa: StatusEntry, mom: StatusEntry) {
-        async let e = fetchPage(id: Constants.Status.elisaPageID)
-        async let m = fetchPage(id: Constants.Status.momPageID)
-        return try await (e, m)
-    }
-
-    private func fetchPage(id: String) async throws -> StatusEntry {
-        guard !id.isEmpty, let url = URL(string: "\(notionBase)/pages/\(id)") else {
-            throw URLError(.badURL)
+    private func pageID(for person: MiraclesPerson) -> String {
+        switch person {
+        case .elisa:  return Constants.Status.elisaPageID
+        case .mom:    return Constants.Status.momPageID
+        case .sister: return Constants.Status.sisterPageID
         }
-        var req = URLRequest(url: url)
-        req.httpMethod = "GET"
-        notionHeaders.forEach { req.setValue($1, forHTTPHeaderField: $0) }
-        let (data, _) = try await URLSession.shared.data(for: req)
-        return try parseEntry(from: data)
     }
 
-    private func parseEntry(from data: Data) throws -> StatusEntry {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let id = json["id"] as? String,
-            let props = json["properties"] as? [String: Any]
-        else { throw URLError(.cannotParseResponse) }
-
-        let name = (props["Name"] as? [String: Any])?["title"] as? [[String: Any]]
-        let nameStr = name?.first?["plain_text"] as? String ?? ""
-
-        let mood = (props["Mood"] as? [String: Any])?["number"] as? Int ?? 50
-
-        let adjArr = (props["Adjective"] as? [String: Any])?["rich_text"] as? [[String: Any]]
-        let adjective = adjArr?.compactMap { $0["plain_text"] as? String }.joined() ?? ""
-
-        let moodUpdatedAt = parseDate(from: props["MoodUpdatedAt"])
-        let lat  = (props["Latitude"]  as? [String: Any])?["number"] as? Double
-        let lon  = (props["Longitude"] as? [String: Any])?["number"] as? Double
-        let locUpdatedAt = parseDate(from: props["LocationUpdatedAt"])
-
-        return StatusEntry(
-            id: id,
-            name: nameStr,
-            mood: mood,
-            adjective: adjective,
-            moodUpdatedAt: moodUpdatedAt,
-            latitude: lat,
-            longitude: lon,
-            locationUpdatedAt: locUpdatedAt
-        )
-    }
-
-    private func parseDate(from prop: Any?) -> Date? {
-        guard
-            let d = prop as? [String: Any],
-            let dateObj = d["date"] as? [String: Any],
-            let str = dateObj["start"] as? String
-        else { return nil }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = formatter.date(from: str) { return date }
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter.date(from: str)
-    }
-
-    // MARK: - Update mood
-
-    func updateMood(_ mood: Int, for pageID: String) async throws {
-        let isoNow = isoString(for: Date())
-        try await patchPage(id: pageID, body: [
-            "properties": [
-                "Mood":           ["number": mood],
-                "MoodUpdatedAt":  ["date": ["start": isoNow]]
-            ]
-        ])
-    }
-
-    func updateAdjective(_ adjective: String, for pageID: String) async throws {
-        try await patchPage(id: pageID, body: [
-            "properties": [
-                "Adjective": ["rich_text": [["text": ["content": adjective]]]],
-                "MoodUpdatedAt": ["date": ["start": isoString(for: Date())]]
-            ]
-        ])
-    }
-
-    func sendAdjectiveNotification(adjective: String, fromName: String) async {
-        let body = "\(fromName) is feeling: \(adjective)"
-        // APNs (instant) — falls back to ntfy polling if token not yet stored
-        await sendPush(title: "Status update 💛", body: body)
-        // ntfy fallback
-        guard let url = URL(string: "\(ntfyBase)/\(Constants.Status.ntfyTopic)") else { return }
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("Status update 💛", forHTTPHeaderField: "X-Title")
-        req.setValue("default", forHTTPHeaderField: "X-Priority")
-        req.setValue("status,\(deviceTag)", forHTTPHeaderField: "X-Tags")
-        req.httpBody = body.data(using: .utf8)
-        _ = try? await URLSession.shared.data(for: req)
+    /// Page IDs for the other 2 family members (used for push fan-out).
+    /// Skips empty IDs so a not-yet-configured page does not get a request.
+    private func otherPageIDs(for person: MiraclesPerson) -> [String] {
+        let all: [MiraclesPerson] = [.elisa, .mom, .sister]
+        return all.filter { $0 != person }.map(pageID(for:)).filter { !$0.isEmpty }
     }
 
     // MARK: - Update location
@@ -149,11 +71,9 @@ final class StatusService: @unchecked Sendable {
     /// retryTokenStorage() after identity is confirmed in SettingsView.
     func storeDeviceToken(_ token: String) async {
         UserDefaults.standard.set(token, forKey: pendingTokenKey)
-        guard AppIdentity.current != nil else { return }
-        // TODO(miracles-phase-1.5): 2-person logic — Mom and Sister will collide on momPageID. Replace with MiraclesPerson page-id lookup.
-        let ownPageID = AppIdentity.isElisa
-            ? Constants.Status.elisaPageID
-            : Constants.Status.momPageID
+        guard let me = AppIdentity.current else { return }
+        let ownPageID = pageID(for: me)
+        guard !ownPageID.isEmpty else { return }
         try? await patchPage(id: ownPageID, body: [
             "properties": [
                 "DeviceToken": ["rich_text": [["text": ["content": token]]]]
@@ -164,13 +84,11 @@ final class StatusService: @unchecked Sendable {
     /// Re-attempt token storage after identity is confirmed.
     /// Call this from SettingsView when the user selects their identity.
     func retryTokenStorage() async {
-        guard AppIdentity.current != nil else { return }
+        guard let me = AppIdentity.current else { return }
         guard let token = UserDefaults.standard.string(forKey: pendingTokenKey),
               !token.isEmpty else { return }
-        // TODO(miracles-phase-1.5): same 2-vs-3 collision as storeDeviceToken — fix together.
-        let ownPageID = AppIdentity.isElisa
-            ? Constants.Status.elisaPageID
-            : Constants.Status.momPageID
+        let ownPageID = pageID(for: me)
+        guard !ownPageID.isEmpty else { return }
         try? await patchPage(id: ownPageID, body: [
             "properties": [
                 "DeviceToken": ["rich_text": [["text": ["content": token]]]]
@@ -178,15 +96,25 @@ final class StatusService: @unchecked Sendable {
         ])
     }
 
-    /// Send an APNs push to the partner's device via the Vercel backend.
-    /// Fetches the partner's DeviceToken from Notion, then POSTs to the push endpoint.
+    /// Send an APNs push to the other 2 family members' devices via the Vercel backend.
+    /// Fetches each recipient's DeviceToken from Notion, then POSTs to the push endpoint.
+    /// Sends are run in parallel; failures on one recipient do not block the other.
     func sendPush(title: String, body: String) async {
-        // TODO(miracles-phase-1.5): "partner" is 2-person; for 3-person Miracles this needs to fan out to the other 2 device tokens, not pick one "partner".
-        let partnerPageID = AppIdentity.isElisa
-            ? Constants.Status.momPageID
-            : Constants.Status.elisaPageID
+        guard let me = AppIdentity.current else { return }
+        let recipients = otherPageIDs(for: me)
+        guard !recipients.isEmpty else { return }
 
-        guard let token = await fetchDeviceToken(pageID: partnerPageID), !token.isEmpty else { return }
+        await withTaskGroup(of: Void.self) { group in
+            for pageID in recipients {
+                group.addTask { [weak self] in
+                    await self?.sendPushTo(pageID: pageID, title: title, body: body)
+                }
+            }
+        }
+    }
+
+    private func sendPushTo(pageID: String, title: String, body: String) async {
+        guard let token = await fetchDeviceToken(pageID: pageID), !token.isEmpty else { return }
         guard let url = URL(string: Constants.Status.pushEndpoint) else { return }
 
         var req = URLRequest(url: url)
@@ -214,12 +142,12 @@ final class StatusService: @unchecked Sendable {
 
     // MARK: - Shared Today pick (Today tab unification)
 
-    /// Reads the shared Tier-3 pick from the Hummingbird Notion page.
+    /// Reads the shared Tier-3 pick from the family anchor page (Elisa's).
     /// Format stored in TodayPick property: "YYYY-MM-DD:entryID"
     /// Returns the entryID only if the stored date matches today's dateStr.
     func fetchTodayPick(for dateStr: String) async -> String? {
-        // TODO(miracles-phase-1.5): hardcoded to hummingbirdPageID — for 3-person Miracles, decide which page is the "shared today pick" anchor (or move to a dedicated shared page).
-        guard let url = URL(string: "\(notionBase)/pages/\(Constants.Status.momPageID)") else { return nil }
+        guard !sharedAnchorPageID.isEmpty,
+              let url = URL(string: "\(notionBase)/pages/\(sharedAnchorPageID)") else { return nil }
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         notionHeaders.forEach { req.setValue($1, forHTTPHeaderField: $0) }
@@ -234,59 +162,15 @@ final class StatusService: @unchecked Sendable {
         return String(parts[1])
     }
 
-    /// Writes the shared Tier-3 pick to the Hummingbird Notion page.
+    /// Writes the shared Tier-3 pick to the family anchor page (Elisa's).
     func storeTodayPick(dateStr: String, entryID: String) async {
+        guard !sharedAnchorPageID.isEmpty else { return }
         let value = "\(dateStr):\(entryID)"
-        try? await patchPage(id: Constants.Status.momPageID, body: [
+        try? await patchPage(id: sharedAnchorPageID, body: [
             "properties": [
                 "TodayPick": ["rich_text": [["text": ["content": value]]]]
             ]
         ])
-    }
-
-    // MARK: - Combined status update (mood + adjective in one Notion patch + one notification)
-
-    func sendStatusUpdate(mood: Int, adjective: String, fromName: String, pageID: String) async {
-        let isoNow = isoString(for: Date())
-        var props: [String: Any] = [
-            "Mood":          ["number": mood],
-            "MoodUpdatedAt": ["date": ["start": isoNow]]
-        ]
-        props["Adjective"] = ["rich_text": [["text": ["content": adjective]]]]
-        try? await patchPage(id: pageID, body: ["properties": props])
-
-        let emoji = moodEmoji(for: mood)
-        var body = "\(fromName) is feeling \(emoji) (\(mood)%)"
-        if !adjective.isEmpty { body += " — \(adjective)" }
-
-        await sendPush(title: "Status update", body: body)
-
-        guard let url = URL(string: "\(ntfyBase)/\(Constants.Status.ntfyTopic)") else { return }
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("Status update", forHTTPHeaderField: "X-Title")
-        req.setValue("default", forHTTPHeaderField: "X-Priority")
-        req.setValue("status,\(deviceTag)", forHTTPHeaderField: "X-Tags")
-        req.httpBody = body.data(using: .utf8)
-        _ = try? await URLSession.shared.data(for: req)
-    }
-
-    // MARK: - ntfy mood notification
-
-    func sendMoodNotification(mood: Int, fromName: String) async {
-        let emoji = moodEmoji(for: mood)
-        let body = "\(fromName) is feeling \(emoji) (\(mood)%)"
-        // APNs (instant) — falls back to ntfy polling if token not yet stored
-        await sendPush(title: "Status update 💛", body: body)
-        // ntfy fallback
-        guard let url = URL(string: "\(ntfyBase)/\(Constants.Status.ntfyTopic)") else { return }
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("Status update 💛", forHTTPHeaderField: "X-Title")
-        req.setValue("default", forHTTPHeaderField: "X-Priority")
-        req.setValue("status,\(deviceTag)", forHTTPHeaderField: "X-Tags")
-        req.httpBody = body.data(using: .utf8)
-        _ = try? await URLSession.shared.data(for: req)
     }
 
     // MARK: - Receive status notifications (foreground polling)
@@ -322,7 +206,7 @@ final class StatusService: @unchecked Sendable {
             let evID = event["id"] as? String ?? UUID().uuidString
             let currentBadge = await UIApplication.shared.applicationIconBadgeNumber
             let content = UNMutableNotificationContent()
-            content.title = "Status update 💛"
+            content.title = "Status update"
             content.body = message
             content.sound = .default
             content.badge = NSNumber(value: currentBadge + 1)
@@ -350,16 +234,6 @@ final class StatusService: @unchecked Sendable {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f.string(from: date)
-    }
-
-    private func moodEmoji(for mood: Int) -> String {
-        switch mood {
-        case 0...20:  return "😴"
-        case 21...40: return "😔"
-        case 41...60: return "😊"
-        case 61...80: return "🌟"
-        default:      return "🔥"
-        }
     }
 }
 

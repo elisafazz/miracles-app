@@ -1,5 +1,18 @@
 import SwiftUI
 
+// TODO(miracles-phase-3): These hex values + the `sun*` color names are inherited
+// from Sunzzari's dark theme. Miracles theme direction is bright + loving (see
+// theme-design-notes.md). When Elisa picks a palette from palette-previews/:
+//   1. Replace hex values below with the chosen palette
+//   2. Rename `sun*` -> `miracles*` (Color.sunBackground -> Color.miraclesBackground)
+//      across all call sites (use Find/Replace in Xcode after build clean)
+//   3. Update UINavigationBarAppearance + UITabBarAppearance hardcoded #1F2937 in
+//      MiraclesApp.swift to match the new surface color
+//   4. Switch `.preferredColorScheme(.dark)` in MiraclesApp.swift to `.light`
+//      (do this together with the palette change, never alone — see CLAUDE.md
+//      "Visual Verification" rule)
+//   5. Update accent color in asset catalog (AccentColor.colorset)
+//   6. Replace app icon (AppIcon.appiconset) and launch screen
 extension Color {
     static let sunBackground = Color(hex: "#030712")
     static let sunAccent     = Color(hex: "#FBBF24")

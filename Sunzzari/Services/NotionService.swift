@@ -1,8 +1,17 @@
 import Foundation
+import os.log
 
 final class NotionService: @unchecked Sendable {
     static let shared = NotionService()
     private let baseURL = "https://api.notion.com/v1"
+    private static let logger = Logger(subsystem: "com.elisafazzari.miracles", category: "notion-parser")
+
+    /// Logs when a parser drops rows so integration drift is visible (Fail Loud).
+    private func logSkipped(_ kind: String, total: Int, parsed: Int) {
+        if parsed < total {
+            Self.logger.warning("\(kind) skipped \(total - parsed) of \(total) rows (missing/malformed fields)")
+        }
+    }
 
     // MARK: - Memory cache
     private var bestOfCache: (entries: [BestOfEntry], at: Date)?
@@ -11,7 +20,9 @@ final class NotionService: @unchecked Sendable {
     private var restaurantsCache: (items: [Restaurant], at: Date)?
     private var winesCache: (items: [Wine], at: Date)?
     private var activitiesCache: (items: [Activity], at: Date)?
+    private var coverCache: [String: (url: String?, at: Date)] = [:]
     private let cacheTTL: TimeInterval = 300 // 5 minutes
+    private let coverCacheTTL: TimeInterval = 3600 // 1 hour — covers rarely change
 
     func invalidateBestOf() { bestOfCache = nil }
     func invalidatePhotos() { photosCache = nil }
@@ -212,8 +223,13 @@ final class NotionService: @unchecked Sendable {
 
     /// Fetches the cover image URL for a Notion page or database.
     /// Tries GET /pages, GET /databases, then POST /search as a last resort.
-    // TODO(miracles-phase-1.5): no negative cache. If a DB legitimately has no cover, every call retries 3 network round-trips. Cache the nil result with TTL.
+    /// Caches both hits and misses for 1 hour so DBs without covers don't trigger
+    /// 3 network round-trips per call.
     func fetchDatabaseCover(id: String) async throws -> String? {
+        if let cached = coverCache[id], Date().timeIntervalSince(cached.at) < coverCacheTTL {
+            return cached.url
+        }
+
         func extractCover(_ json: [String: Any]) -> String? {
             guard let cover = json["cover"] as? [String: Any] else { return nil }
             if let external = cover["external"] as? [String: Any] {
@@ -237,20 +253,25 @@ final class NotionService: @unchecked Sendable {
             return (json, http.statusCode)
         }
 
+        func cacheAndReturn(_ url: String?) -> String? {
+            coverCache[id] = (url, Date())
+            return url
+        }
+
         // 1. Try pages endpoint (works for regular pages and inline-DB parent pages)
         let pagesResult = await get("pages/\(id)")
         if let json = pagesResult.json, (200...299).contains(pagesResult.status),
-           let cover = extractCover(json) { return cover }
+           let cover = extractCover(json) { return cacheAndReturn(cover) }
 
         // 2. Try databases endpoint
         let dbResult = await get("databases/\(id)")
         if let json = dbResult.json, (200...299).contains(dbResult.status),
-           let cover = extractCover(json) { return cover }
+           let cover = extractCover(json) { return cacheAndReturn(cover) }
 
         // 3. Search by ID — try pages first (most common for this app's use),
         //    then databases. Using a hardcoded "database" filter here was a bug:
         //    it excluded page objects entirely, which is what the 3 Hub cover IDs are.
-        guard let searchURL = URL(string: "\(baseURL)/search") else { return nil }
+        guard let searchURL = URL(string: "\(baseURL)/search") else { return cacheAndReturn(nil) }
         var searchReq = URLRequest(url: searchURL)
         searchReq.httpMethod = "POST"
         searchReq.timeoutInterval = 10
@@ -265,10 +286,10 @@ final class NotionService: @unchecked Sendable {
             let normalizedID = id.replacingOccurrences(of: "-", with: "")
             if let match = results.first(where: {
                 ($0["id"] as? String)?.replacingOccurrences(of: "-", with: "") == normalizedID
-            }) { return extractCover(match) }
+            }) { return cacheAndReturn(extractCover(match)) }
         }
 
-        return nil
+        return cacheAndReturn(nil)
     }
 
     // MARK: - Restaurants
@@ -430,11 +451,11 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Private: Parsers
 
-    // TODO(miracles-phase-1.5): every parser below silently `compactMap`s past malformed rows. A row with missing required fields disappears with no log, no UI banner, no count mismatch warning. Add os_log warnings + a "skipped N rows" surface so integration drift is loud (Fail Loud rule).
+    // Each parser counts skipped rows so silent malformed-row drops surface in logs (Fail Loud).
     private func parsePhotos(from data: Data) -> [FamilyPhoto] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [FamilyPhoto] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             let tagStrings = extractMultiSelect(from: props["Tags"])
@@ -448,12 +469,14 @@ final class NotionService: @unchecked Sendable {
                 tags:          tags
             )
         }
+        logSkipped("parsePhotos", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     private func parseMemories(from data: Data) -> [Memory] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [Memory] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any],
                   let date = extractDate(from: props["Date"]) else { return nil }
@@ -467,12 +490,14 @@ final class NotionService: @unchecked Sendable {
                 photoURL: extractURL(from: props["Photo URL"])
             )
         }
+        logSkipped("parseMemories", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     private func parseBestOf(from data: Data) -> [BestOfEntry] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [BestOfEntry] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any],
                   let date = extractDate(from: props["Date"]) else { return nil }
@@ -485,6 +510,8 @@ final class NotionService: @unchecked Sendable {
                 notes:    extractRichText(from: props["Notes"]) ?? ""
             )
         }
+        logSkipped("parseBestOf", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     // MARK: - Private: Parsers (Hub)
@@ -492,7 +519,7 @@ final class NotionService: @unchecked Sendable {
     private func parseRestaurants(from data: Data) -> [Restaurant] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [Restaurant] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             let prefStr = extractSelect(from: props["Preference"])
@@ -508,12 +535,14 @@ final class NotionService: @unchecked Sendable {
                 comments:     extractRichText(from: props["Comments"]) ?? ""
             )
         }
+        logSkipped("parseRestaurants", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     private func parseWines(from data: Data) -> [Wine] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [Wine] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             let typeStr = extractSelect(from: props["Wine Type"]) ?? "Red"
@@ -531,12 +560,14 @@ final class NotionService: @unchecked Sendable {
                 useForCooking:   (props["Use for Cooking"] as? [String: Any])?["checkbox"] as? Bool ?? false
             )
         }
+        logSkipped("parseWines", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     private func parseActivities(from data: Data) -> [Activity] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
+        let parsed: [Activity] = results.compactMap { page in
             guard let id = page["id"] as? String,
                   let props = page["properties"] as? [String: Any] else { return nil }
             return Activity(
@@ -551,6 +582,8 @@ final class NotionService: @unchecked Sendable {
                 calendarSynced: (props["Calendar Synced?"] as? [String: Any])?["checkbox"] as? Bool ?? false
             )
         }
+        logSkipped("parseActivities", total: results.count, parsed: parsed.count)
+        return parsed
     }
 
     // MARK: - Private: Payload builders

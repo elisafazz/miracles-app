@@ -14,8 +14,6 @@ struct FamilyPhoto: Identifiable {
         case sweet     = "Sweet"
         case cherished = "Cherished"
 
-        var emoji: String { "" }
-
         var color: String {
             switch self {
             case .lovely:    return "#FFB3C6"

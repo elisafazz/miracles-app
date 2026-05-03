@@ -31,7 +31,8 @@ final class NotionService: @unchecked Sendable {
     // MARK: - Disk cache
 
     private var diskCacheDir: URL {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory())
     }
 
     private func saveToDisk(_ data: Data, name: String) {
@@ -47,7 +48,7 @@ final class NotionService: @unchecked Sendable {
     // MARK: - Disk cache accessors (instant warm-start, no network)
 
     func photosDiskCache() -> [FamilyPhoto]? {
-        loadFromDisk(name: "miracles_photos").map { parsePhotos(from: $0) }
+        loadFromDisk(name: "photos").map { parsePhotos(from: $0) }
     }
 
     func bestOfDiskCache() -> [BestOfEntry]? {
@@ -105,10 +106,10 @@ final class NotionService: @unchecked Sendable {
             )
             let photos = parsePhotos(from: data)
             photosCache = (photos, Date())
-            saveToDisk(data, name: "miracles_photos")
+            saveToDisk(data, name: "photos")
             return photos
         } catch {
-            if let diskData = loadFromDisk(name: "miracles_photos") {
+            if let diskData = loadFromDisk(name: "photos") {
                 let photos = parsePhotos(from: diskData)
                 photosCache = (photos, Date())
                 return photos

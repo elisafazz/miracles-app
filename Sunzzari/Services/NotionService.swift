@@ -11,10 +11,6 @@ final class NotionService: @unchecked Sendable {
     private var restaurantsCache: (items: [Restaurant], at: Date)?
     private var winesCache: (items: [Wine], at: Date)?
     private var activitiesCache: (items: [Activity], at: Date)?
-    private var cycleCache: (entries: [CycleEntry], at: Date)?
-    private var creditsCache: (entries: [CreditEntry], at: Date)?
-    private var infoCache: (entries: [MiraclesInfoEntry], at: Date)?
-    private var thoughtsCache: (entries: [ThoughtEntry], at: Date)?
     private let cacheTTL: TimeInterval = 300 // 5 minutes
 
     func invalidateBestOf() { bestOfCache = nil }
@@ -23,10 +19,6 @@ final class NotionService: @unchecked Sendable {
     func invalidateRestaurants() { restaurantsCache = nil }
     func invalidateWines() { winesCache = nil }
     func invalidateActivities() { activitiesCache = nil }
-    func invalidateCycle() { cycleCache = nil }
-    func invalidateCredits() { creditsCache = nil }
-    func invalidateInfo() { infoCache = nil }
-    func invalidateThoughts() { thoughtsCache = nil }
 
     // MARK: - Disk cache
 
@@ -69,18 +61,6 @@ final class NotionService: @unchecked Sendable {
 
     func activitiesDiskCache() -> [Activity]? {
         loadFromDisk(name: "activities").map { parseActivities(from: $0) }
-    }
-
-    func cycleDiskCache() -> [CycleEntry]? {
-        loadFromDisk(name: "cycle").map { parseCycleEntries(from: $0) }
-    }
-
-    func creditsDiskCache() -> [CreditEntry]? {
-        loadFromDisk(name: "credits").map { parseCreditEntries(from: $0) }
-    }
-
-    func thoughtsDiskCache() -> [ThoughtEntry]? {
-        loadFromDisk(name: "thoughts").map { parseThoughts(from: $0) }
     }
 
     private var headers: [String: String] {
@@ -378,91 +358,6 @@ final class NotionService: @unchecked Sendable {
         try await createPage(body: activityPayload(a))
     }
 
-    // MARK: - Cycle Tracker
-
-    func fetchCycleEntries(force: Bool = false) async throws -> [CycleEntry] {
-        if !force, let cached = cycleCache, Date().timeIntervalSince(cached.at) < cacheTTL {
-            return cached.entries
-        }
-        do {
-            let data = try await queryDatabase(
-                id: Constants.Notion.cycleTrackerDBID,
-                sorts: [["property": "Period Start", "direction": "descending"]]
-            )
-            let entries = parseCycleEntries(from: data)
-            cycleCache = (entries, Date())
-            saveToDisk(data, name: "cycle")
-            return entries
-        } catch {
-            if let diskData = loadFromDisk(name: "cycle") {
-                let entries = parseCycleEntries(from: diskData)
-                cycleCache = (entries, Date())
-                return entries
-            }
-            throw error
-        }
-    }
-
-    @discardableResult
-    func addCycleEntry(person: CycleEntry.Person, periodStart: Date, avgCycle: Int, notes: String) async throws -> CycleEntry {
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        let title = "\(person.rawValue) — \(fmt.string(from: periodStart))"
-        let body: [String: Any] = [
-            "parent": ["database_id": Constants.Notion.cycleTrackerDBID],
-            "properties": [
-                "Name":         titleProp(title),
-                "Period Start": dateProp(periodStart),
-                "Person":       ["select": ["name": person.rawValue]],
-                "Avg Cycle":    ["number": avgCycle],
-                "Notes":        richTextProp(notes)
-            ]
-        ]
-        try await createPage(body: body)
-        cycleCache = nil
-        return CycleEntry(id: UUID().uuidString, periodStart: periodStart,
-                          person: person, avgCycle: avgCycle, notes: notes,
-                          predictedNext: nil, cycleLength: nil)
-    }
-
-    // MARK: - Credits Tracker
-
-    func fetchCredits(force: Bool = false) async throws -> [CreditEntry] {
-        if !force, let cached = creditsCache, Date().timeIntervalSince(cached.at) < cacheTTL {
-            return cached.entries
-        }
-        do {
-            let data = try await queryDatabase(
-                id: Constants.Notion.creditsTrackerDBID,
-                sorts: [["property": "Credit", "direction": "ascending"]]
-            )
-            let entries = parseCreditEntries(from: data)
-            creditsCache = (entries, Date())
-            saveToDisk(data, name: "credits")
-            return entries
-        } catch {
-            if let diskData = loadFromDisk(name: "credits") {
-                let entries = parseCreditEntries(from: diskData)
-                creditsCache = (entries, Date())
-                return entries
-            }
-            throw error
-        }
-    }
-
-    func toggleCredit(_ credit: CreditEntry) async throws {
-        var props: [String: Any]
-        switch credit.frequency {
-        case .monthly:
-            props = ["Month Used": ["multi_select": credit.monthsUsed.map { ["name": $0] }]]
-        case .quarterly, .semiAnnual:
-            props = ["Quarter Used": ["multi_select": credit.quartersUsed.map { ["name": $0] }]]
-        case .annual, .every4Years:
-            props = ["Year Used": ["checkbox": credit.yearUsed]]
-        }
-        try await updatePage(id: credit.id, body: ["properties": props])
-        creditsCache = nil
-    }
-
     // MARK: - Private: API
 
     private func queryDatabase(id: String, sorts: [[String: Any]], filter: [String: Any]? = nil) async throws -> Data {
@@ -530,118 +425,6 @@ final class NotionService: @unchecked Sendable {
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw NotionError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
-        }
-    }
-
-    // MARK: - Fetch: Info
-
-    func fetchMiraclesInfo(force: Bool = false) async throws -> [MiraclesInfoEntry] {
-        if !force, let cached = infoCache, Date().timeIntervalSince(cached.at) < 300 {
-            return cached.entries
-        }
-        guard let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.miraclesInfoDBID)/query") else {
-            throw NotionError.badURL
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 10
-        headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-        request.httpBody = try JSONSerialization.data(withJSONObject: [:])
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let entries = parseInfoEntries(from: data)
-        infoCache = (entries, Date())
-        return entries
-    }
-
-    func fetchInfoBlocks(pageID: String) async throws -> [InfoBlock] {
-        let rawBlocks = try await fetchBlockChildren(blockID: pageID)
-        var result: [InfoBlock] = []
-        for block in rawBlocks {
-            guard let type = block["type"] as? String else { continue }
-            switch type {
-            case "heading_2":
-                if let text = extractPlainTextFromBlocks(block[type] as? [String: Any]) {
-                    result.append(.heading2(text))
-                }
-            case "heading_3":
-                if let text = extractPlainTextFromBlocks(block[type] as? [String: Any]) {
-                    result.append(.heading3(text))
-                }
-            case "bulleted_list_item":
-                if let content = block[type] as? [String: Any] {
-                    let text = extractPlainTextFromBlocks(content) ?? ""
-                    let url  = extractHrefFromBlocks(content)
-                    result.append(.bullet(text: text, url: url))
-                }
-            case "paragraph":
-                if let text = extractPlainTextFromBlocks(block[type] as? [String: Any]), !text.isEmpty {
-                    result.append(.paragraph(text))
-                }
-            case "table":
-                guard let blockID = block["id"] as? String else { continue }
-                let rowBlocks = try await fetchBlockChildren(blockID: blockID)
-                let rows: [[String]] = rowBlocks.compactMap { row in
-                    guard let cells = (row["table_row"] as? [String: Any])?["cells"] as? [[[String: Any]]] else { return nil }
-                    return cells.map { cell in
-                        cell.compactMap { $0["plain_text"] as? String }.joined()
-                    }
-                }
-                if !rows.isEmpty { result.append(.tableGrid(rows: rows)) }
-            default:
-                break
-            }
-        }
-        return result
-    }
-
-    func fetchBlockChildren(blockID: String) async throws -> [[String: Any]] {
-        var all: [[String: Any]] = []
-        var cursor: String? = nil
-        repeat {
-            var urlStr = "\(baseURL)/blocks/\(blockID)/children?page_size=100"
-            if let c = cursor { urlStr += "&start_cursor=\(c)" }
-            guard let url = URL(string: urlStr) else { throw NotionError.badURL }
-            var request = URLRequest(url: url)
-            request.httpMethod = "GET"
-            request.timeoutInterval = 10
-            headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
-            let (data, _) = try await URLSession.shared.data(for: request)
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
-            if let results = json["results"] as? [[String: Any]] { all += results }
-            cursor = (json["has_more"] as? Bool == true) ? (json["next_cursor"] as? String) : nil
-        } while cursor != nil
-        return all
-    }
-
-    private func extractPlainTextFromBlocks(_ obj: [String: Any]?) -> String? {
-        guard let rtArr = obj?["rich_text"] as? [[String: Any]] else { return nil }
-        let text = rtArr.compactMap { $0["plain_text"] as? String }.joined()
-        return text.isEmpty ? nil : text
-    }
-
-    private func extractHrefFromBlocks(_ obj: [String: Any]?) -> String? {
-        guard let rtArr = obj?["rich_text"] as? [[String: Any]] else { return nil }
-        return rtArr.compactMap { ($0["text"] as? [String: Any])?["link"] as? [String: Any] }
-                    .compactMap { $0["url"] as? String }
-                    .first
-    }
-
-    // MARK: - Private: Parser (Info)
-
-    private func parseInfoEntries(from data: Data) -> [MiraclesInfoEntry] {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
-            guard let id = page["id"] as? String,
-                  let props = page["properties"] as? [String: Any] else { return nil }
-            let catStr = extractSelect(from: props["Category"]) ?? "Other"
-            let tags = extractMultiSelect(from: props["Tags"])
-            return MiraclesInfoEntry(
-                id:       id,
-                title:    extractTitle(from: props["Name"]) ?? "Untitled",
-                category: MiraclesInfoEntry.Category(rawValue: catStr) ?? .other,
-                tags:     tags
-            )
         }
     }
 
@@ -766,67 +549,6 @@ final class NotionService: @unchecked Sendable {
                 seasonal:       (props["Seasonal?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
                 home:           (props["Home?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
                 calendarSynced: (props["Calendar Synced?"] as? [String: Any])?["checkbox"] as? Bool ?? false
-            )
-        }
-    }
-
-    // MARK: - Private: Parsers (Cycle + Credits)
-
-    private func parseCycleEntries(from data: Data) -> [CycleEntry] {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
-            guard let id = page["id"] as? String,
-                  let props = page["properties"] as? [String: Any],
-                  let periodStart = extractDate(from: props["Period Start"]) else { return nil }
-            let personStr = extractSelect(from: props["Person"]) ?? "Elisa"
-            let avgCycle = (props["Avg Cycle"] as? [String: Any])?["number"] as? Int ?? 28
-            // TODO(miracles-phase-1.5): silently defaulting unknown person -> .elisa misattributes data. Add os_log warning + decide whether to drop the row instead.
-            return CycleEntry(
-                id:            id,
-                periodStart:   periodStart,
-                person:        CycleEntry.Person(rawValue: personStr) ?? .elisa,
-                avgCycle:      avgCycle,
-                notes:         extractRichText(from: props["Notes"]) ?? "",
-                predictedNext: extractFormulaDate(from: props["Predicted Next Period"]),
-                cycleLength:   extractFormulaNumber(from: props["Cycle Length"])
-            )
-        }
-    }
-
-    private func parseCreditEntries(from data: Data) -> [CreditEntry] {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let results = json["results"] as? [[String: Any]] else { return [] }
-        return results.compactMap { page in
-            guard let id = page["id"] as? String,
-                  let props = page["properties"] as? [String: Any] else { return nil }
-
-            func multiSelect(_ key: String) -> [String] {
-                guard let d = props[key] as? [String: Any],
-                      let arr = d["multi_select"] as? [[String: Any]] else { return [] }
-                return arr.compactMap { $0["name"] as? String }
-            }
-            func checkbox(_ key: String) -> Bool {
-                (props[key] as? [String: Any])?["checkbox"] as? Bool ?? false
-            }
-
-            let cardStr   = extractSelect(from: props["Card"])      ?? ""
-            let personStr = extractSelect(from: props["Person"])     ?? "Elisa"
-            let freqStr   = extractSelect(from: props["Frequency"])  ?? "Monthly"
-
-            // TODO(miracles-phase-1.5): same silent .elisa fallback as parseCycleEntries. Add logging + drop-row policy.
-            return CreditEntry(
-                id:            id,
-                credit:        extractTitle(from: props["Credit"]) ?? "Untitled",
-                card:          CreditEntry.Card(rawValue: cardStr)       ?? .amexPlatinum,
-                person:        CreditEntry.Person(rawValue: personStr)   ?? .elisa,
-                frequency:     CreditEntry.Frequency(rawValue: freqStr)  ?? .monthly,
-                amountDollars: (props["Value"] as? [String: Any])?["number"] as? Double,
-                portalRequired: checkbox("Portal Required"),
-                notes:         extractRichText(from: props["Notes"]) ?? "",
-                monthsUsed:    multiSelect("Month Used"),
-                quartersUsed:  multiSelect("Quarter Used"),
-                yearUsed:      checkbox("Year Used")
             )
         }
     }
@@ -993,69 +715,6 @@ final class NotionService: @unchecked Sendable {
         if let n = formula["number"] as? Int    { return n }
         if let n = formula["number"] as? Double { return Int(n) }
         return nil
-    }
-
-    // MARK: - Thought-Action
-
-    func fetchThoughts(force: Bool = false) async throws -> [ThoughtEntry] {
-        if !force, let cached = thoughtsCache, Date().timeIntervalSince(cached.at) < cacheTTL {
-            return cached.entries
-        }
-        do {
-            let data = try await queryDatabase(
-                id: Constants.Notion.thoughtActionDBID,
-                sorts: [["timestamp": "created_time", "direction": "descending"]]
-            )
-            let entries = parseThoughts(from: data)
-            thoughtsCache = (entries, Date())
-            saveToDisk(data, name: "thoughts")
-            return entries
-        } catch {
-            if let diskData = loadFromDisk(name: "thoughts") {
-                let entries = parseThoughts(from: diskData)
-                thoughtsCache = (entries, Date())
-                return entries
-            }
-            throw error
-        }
-    }
-
-    func addThought(content: String, author: String) async throws {
-        try await createPage(body: thoughtPayload(content: content, author: author))
-        invalidateThoughts()
-    }
-
-    private func thoughtPayload(content: String, author: String) -> [String: Any] {
-        [
-            "parent": ["database_id": Constants.Notion.thoughtActionDBID],
-            "properties": [
-                "Entry":  titleProp(content),
-                "Author": ["select": ["name": author]],
-                "Date":   dateProp(Date())
-            ]
-        ]
-    }
-
-    private func parseThoughts(from data: Data) -> [ThoughtEntry] {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let results = json["results"] as? [[String: Any]] else { return [] }
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoNoFrac = ISO8601DateFormatter()
-        isoNoFrac.formatOptions = [.withInternetDateTime]
-        return results.compactMap { page in
-            guard let id = page["id"] as? String,
-                  let props = page["properties"] as? [String: Any] else { return nil }
-            let createdStr = page["created_time"] as? String ?? ""
-            let date = iso.date(from: createdStr) ?? isoNoFrac.date(from: createdStr) ?? Date()
-            return ThoughtEntry(
-                id:      id,
-                content: extractTitle(from: props["Entry"]) ?? "",
-                // TODO(miracles-phase-1.5): "Hummingbird" is a Sunzzari-specific default that survived the fork. For 3-person Miracles, drop the default or make it nil and have UI render "Unknown".
-                author:  extractSelect(from: props["Author"]) ?? "Hummingbird",
-                date:    date
-            )
-        }
     }
 
     enum NotionError: LocalizedError {

@@ -20,13 +20,6 @@ enum Constants {
         static let restaurantsDBID  = "00000000-0000-0000-0000-000000000000"
         static let winesDBID        = "00000000-0000-0000-0000-000000000000"
         static let activitiesDBID   = "00000000-0000-0000-0000-000000000000"
-        // Cathy-specific feature DBs -- kept as placeholders to preserve compile state
-        // for restored dead code (NotionService methods). Phase 1.5 surgical removal will
-        // strip these and the methods that reference them.
-        static let cycleTrackerDBID = "00000000-0000-0000-0000-000000000000"
-        static let creditsTrackerDBID = "00000000-0000-0000-0000-000000000000"
-        static let thoughtActionDBID  = "00000000-0000-0000-0000-000000000000"
-        static let miraclesInfoDBID   = "00000000-0000-0000-0000-000000000000"
         static let version          = "2022-06-28"
     }
 

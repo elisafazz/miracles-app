@@ -15,27 +15,27 @@ struct ContentView: View {
                     }
                     .tag(0)
 
+                NavigationStack { ThoughtsView() }
+                    .tabItem {
+                        Label("Thoughts", systemImage: "lightbulb.fill")
+                    }
+                    .tag(1)
+
+                NavigationStack { StatusView() }
+                    .tabItem {
+                        Label("Status", systemImage: "bolt.horizontal.circle.fill")
+                    }
+                    .tag(2)
+
                 HubView()
                     .tabItem {
                         Label("Hub", systemImage: "square.grid.2x2.fill")
                     }
-                    .tag(1)
-
-                BestOfView()
-                    .tabItem {
-                        Label("Best Of", systemImage: "star.fill")
-                    }
-                    .tag(2)
-
-                SearchView()
-                    .tabItem {
-                        Label("Search", systemImage: "magnifyingglass")
-                    }
                     .tag(3)
 
-                SettingsView(onComplete: {})
+                MoreView()
                     .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
+                        Label("More", systemImage: "ellipsis.circle.fill")
                     }
                     .tag(4)
             }

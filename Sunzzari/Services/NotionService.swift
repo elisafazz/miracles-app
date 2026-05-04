@@ -20,6 +20,7 @@ final class NotionService: @unchecked Sendable {
     private var restaurantsCache: (items: [Restaurant], at: Date)?
     private var winesCache: (items: [Wine], at: Date)?
     private var activitiesCache: (items: [Activity], at: Date)?
+    private var thoughtsCache: (entries: [ThoughtEntry], at: Date)?
     private var coverCache: [String: (url: String?, at: Date)] = [:]
     private let cacheTTL: TimeInterval = 300 // 5 minutes
     private let coverCacheTTL: TimeInterval = 3600 // 1 hour — covers rarely change
@@ -30,6 +31,7 @@ final class NotionService: @unchecked Sendable {
     func invalidateRestaurants() { restaurantsCache = nil }
     func invalidateWines() { winesCache = nil }
     func invalidateActivities() { activitiesCache = nil }
+    func invalidateThoughts() { thoughtsCache = nil }
 
     // MARK: - Disk cache
 
@@ -72,6 +74,10 @@ final class NotionService: @unchecked Sendable {
 
     func activitiesDiskCache() -> [Activity]? {
         loadFromDisk(name: "activities").map { parseActivities(from: $0) }
+    }
+
+    func thoughtsDiskCache() -> [ThoughtEntry]? {
+        loadFromDisk(name: "thoughts").map { parseThoughts(from: $0) }
     }
 
     private var headers: [String: String] {
@@ -748,6 +754,72 @@ final class NotionService: @unchecked Sendable {
         if let n = formula["number"] as? Int    { return n }
         if let n = formula["number"] as? Double { return Int(n) }
         return nil
+    }
+
+    // MARK: - Thoughts
+
+    func fetchThoughts(force: Bool = false) async throws -> [ThoughtEntry] {
+        if !force, let cached = thoughtsCache, Date().timeIntervalSince(cached.at) < cacheTTL {
+            return cached.entries
+        }
+        do {
+            let data = try await queryDatabase(
+                id: Constants.Notion.thoughtsDBID,
+                sorts: [["timestamp": "created_time", "direction": "descending"]]
+            )
+            let entries = parseThoughts(from: data)
+            thoughtsCache = (entries, Date())
+            saveToDisk(data, name: "thoughts")
+            return entries
+        } catch {
+            if let diskData = loadFromDisk(name: "thoughts") {
+                let entries = parseThoughts(from: diskData)
+                thoughtsCache = (entries, Date())
+                return entries
+            }
+            throw error
+        }
+    }
+
+    func addThought(content: String, author: String) async throws {
+        try await createPage(body: thoughtPayload(content: content, author: author))
+        invalidateThoughts()
+    }
+
+    private func thoughtPayload(content: String, author: String) -> [String: Any] {
+        [
+            "parent": ["database_id": Constants.Notion.thoughtsDBID],
+            "properties": [
+                "Entry":  titleProp(content),
+                "Author": ["select": ["name": author]],
+                "Date":   dateProp(Date())
+            ]
+        ]
+    }
+
+    private func parseThoughts(from data: Data) -> [ThoughtEntry] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [[String: Any]] else { return [] }
+        let fmtFull = DateFormatter(); fmtFull.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        let fmtAlt  = DateFormatter(); fmtAlt.dateFormat  = "yyyy-MM-dd'T'HH:mm:ssZ"
+        var skipped = 0
+        let parsed: [ThoughtEntry] = results.compactMap { page in
+            guard let id = page["id"] as? String,
+                  let props = page["properties"] as? [String: Any] else {
+                skipped += 1; return nil
+            }
+            let createdStr = page["created_time"] as? String ?? ""
+            let date = fmtFull.date(from: createdStr) ?? fmtAlt.date(from: createdStr) ?? Date()
+            return ThoughtEntry(
+                id:      id,
+                content: extractTitle(from: props["Entry"]) ?? "",
+                author:  extractSelect(from: props["Author"]) ?? "Elisa",
+                date:    date
+            )
+        }
+        logSkipped("parseThoughts", total: results.count, parsed: parsed.count)
+        _ = skipped
+        return parsed
     }
 
     enum NotionError: LocalizedError {

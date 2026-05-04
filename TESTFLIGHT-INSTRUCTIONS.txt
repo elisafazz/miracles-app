@@ -1,0 +1,71 @@
+Hi! Here's how to install Miracles on your iPhone. It takes 5 minutes.
+
+
+STEP 1 -- Install TestFlight
+
+Open the App Store on your iPhone. Search for "TestFlight" (Apple's
+official app for beta-testing apps). Tap the cloud icon to install.
+The icon is white with a propeller-like blue logo.
+
+If you already have TestFlight from another app, skip this step.
+
+
+STEP 2 -- Accept the invite
+
+You will get an email from Apple, subject something like
+"Elisa Fazzari has invited you to test Miracles". Open that email
+ON YOUR IPHONE (not on your computer).
+
+Tap "View in TestFlight" or the redeem code button in the email.
+TestFlight will open and ask you to accept. Tap "Accept".
+
+
+STEP 3 -- Install Miracles
+
+In TestFlight, you should now see "Miracles" listed.
+Tap it, then tap "Install" (or "Update" if a new version is available).
+
+When it finishes, the Miracles icon will appear on your home screen
+just like any other app.
+
+
+STEP 4 -- Open Miracles and grant permissions
+
+Open Miracles. The first time you run it, the app will ask:
+
+  - "Miracles Would Like to Send You Notifications" -- tap ALLOW.
+    This is so you get notified when Elisa (DD) or Beat post things.
+
+  - "Allow 'Miracles' to use your location?" -- tap ALLOW WHILE USING
+    APP. This is so the family map shows where you are when the app
+    is open. It does NOT track you in the background.
+
+After that, you'll see "My Identity -- Who are you?". Tap your name
+("Mom" or "Beat") to set yourself.
+
+That's it -- you're in. Welcome.
+
+
+GETTING UPDATES
+
+Whenever I (DD) ship an update to the app, you will get an email
+from TestFlight saying "Miracles -- New build available". Open
+TestFlight on your phone and tap "Update" next to Miracles. Done.
+
+You don't need to do anything else. No App Store, no developer mode,
+nothing weird. Just TestFlight + Update.
+
+
+IF SOMETHING GOES WRONG
+
+  - "I never got the invite email" -- check spam, then text DD.
+  - "TestFlight says the build expired" -- happens after 90 days
+    if I haven't pushed a new version. Text DD and I'll push one.
+  - "Miracles crashes on launch" -- text DD, ideally with a
+    screenshot of what you saw before the crash.
+  - "I tapped Don't Allow on notifications by accident" -- open
+    iPhone Settings -> Miracles -> Notifications -> turn it on.
+
+
+love,
+DD

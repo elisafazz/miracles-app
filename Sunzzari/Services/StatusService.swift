@@ -283,12 +283,12 @@ final class StatusService: @unchecked Sendable {
             if tags.contains(deviceTag) { continue }
 
             let evID = event["id"] as? String ?? UUID().uuidString
-            let currentBadge = await UIApplication.shared.applicationIconBadgeNumber
+            let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
             let content = UNMutableNotificationContent()
             content.title = "Status update"
             content.body = message
             content.sound = .default
-            content.badge = NSNumber(value: currentBadge + 1)
+            content.badge = NSNumber(value: delivered.count + 1)
             let req = UNNotificationRequest(
                 identifier: "miracles-status-\(evID)",
                 content: content,

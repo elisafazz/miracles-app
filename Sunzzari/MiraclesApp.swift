@@ -116,8 +116,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Increment badge for remote pushes (local notifications set their own badge)
         let id = notification.request.identifier
         if !id.hasPrefix("miracles-boop-") && !id.hasPrefix("miracles-status-") {
-            let current = UIApplication.shared.applicationIconBadgeNumber
-            UNUserNotificationCenter.current().setBadgeCount(current + 1)
+            Task {
+                let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
+                try? await UNUserNotificationCenter.current().setBadgeCount(delivered.count + 1)
+            }
         }
         completionHandler([.banner, .sound])
     }

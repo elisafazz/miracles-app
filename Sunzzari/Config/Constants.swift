@@ -31,8 +31,9 @@ enum Constants {
     }
 
     enum Cloudinary {
-        // TODO Phase 2: replace with Miracles Cloudinary cloud + upload preset
-        static let cloudName    = "MIRACLES_PLACEHOLDER_cloudName"
+        // Miracles uses Elisa's Cloudinary account (separate folder from Sunzzari).
+        // Upload preset is unsigned and writes to the Lovies/Miracles album.
+        static let cloudName    = "dhkw1tuq6"
         static let uploadPreset = "miracles_uploads"
     }
 

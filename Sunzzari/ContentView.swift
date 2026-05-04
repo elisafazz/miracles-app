@@ -91,7 +91,7 @@ struct ContentView: View {
             if phase == .active {
                 Task {
                     let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
-                    UNUserNotificationCenter.current().setBadgeCount(delivered.count)
+                    try? await UNUserNotificationCenter.current().setBadgeCount(delivered.count)
                     await BoopService.shared.checkForBoops()
                     await StatusService.shared.checkForStatus()
                     await DailySetupService.shared.runDailySetup()

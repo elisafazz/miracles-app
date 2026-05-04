@@ -12,7 +12,7 @@ struct MiraclesApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }
@@ -35,15 +35,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // ── Global nav bar appearance (must run before any views are created) ──
         // Uses UINavigationBarAppearance so .toolbarBackground() in views cannot
         // override the serif font — this is the only reliable approach in iOS 15+.
+        // Direction 1 palette: nav bar uses miraclesSurface (#FFFFFF) with charcoal
+        // (#2A2421) text. Must match AppColors.swift exactly -- this UIKit code path
+        // doesn't see the SwiftUI Color extension.
+        let surfaceUIColor  = UIColor(red: 0xFF/255, green: 0xFF/255, blue: 0xFF/255, alpha: 1) // miraclesSurface
+        let textUIColor     = UIColor(red: 0x2A/255, green: 0x24/255, blue: 0x21/255, alpha: 1) // miraclesText
         let navAppearance = UINavigationBarAppearance()
         navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor(red: 0x1F/255, green: 0x29/255, blue: 0x37/255, alpha: 1) // sunSurface #1F2937
+        navAppearance.backgroundColor = surfaceUIColor
         let serifInline = UIFont.systemFont(ofSize: 17, weight: .semibold).fontDescriptor.withDesign(.serif)
-        var inlineAttrs: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.white]
+        var inlineAttrs: [NSAttributedString.Key: Any] = [.foregroundColor: textUIColor]
         if let si = serifInline { inlineAttrs[.font] = UIFont(descriptor: si, size: 17) }
         navAppearance.titleTextAttributes = inlineAttrs
         let serifLarge = UIFont.systemFont(ofSize: 34, weight: .bold).fontDescriptor.withDesign(.serif)
-        var largeTitleAttrs: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.white]
+        var largeTitleAttrs: [NSAttributedString.Key: Any] = [.foregroundColor: textUIColor]
         if let sd = serifLarge { largeTitleAttrs[.font] = UIFont(descriptor: sd, size: 34) }
         navAppearance.largeTitleTextAttributes = largeTitleAttrs
         UINavigationBar.appearance().standardAppearance   = navAppearance
@@ -53,7 +58,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // ── Global tab bar appearance ──
         let tabAppearance = UITabBarAppearance()
         tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(red: 0x1F/255, green: 0x29/255, blue: 0x37/255, alpha: 1) // sunSurface
+        tabAppearance.backgroundColor = surfaceUIColor // miraclesSurface
         // Serif tab-bar labels so UIKit chrome matches the SwiftUI .fontDesign(.serif) inheritance.
         let tabLabelDescriptor = UIFont.systemFont(ofSize: 10, weight: .medium).fontDescriptor.withDesign(.serif)
         if let td = tabLabelDescriptor {

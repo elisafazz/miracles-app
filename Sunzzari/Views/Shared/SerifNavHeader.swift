@@ -36,7 +36,7 @@ struct SerifNavHeader<Trailing: View>: View {
                             Text("Back")
                                 .font(.system(size: 17, weight: .regular, design: .serif))
                         }
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                     }
                     .buttonStyle(.plain)
                     Spacer()

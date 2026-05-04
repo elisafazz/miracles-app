@@ -18,20 +18,20 @@ struct BoopView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("Write a custom boop")
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
 
                     TextField("Write something sweet...", text: $customText, axis: .vertical)
                         .lineLimit(4, reservesSpace: true)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .padding(12)
-                        .background(Color.sunSurface)
+                        .background(Color.miraclesSurface)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
                                     trimmed.isEmpty
                                         ? Color.white.opacity(0.08)
-                                        : Color.sunAccent,
+                                        : Color.miraclesAccent,
                                     lineWidth: 1
                                 )
                         )
@@ -48,26 +48,26 @@ struct BoopView: View {
                         HStack(spacing: 8) {
                             if isSending {
                                 ProgressView()
-                                    .tint(Color.sunBackground)
+                                    .tint(Color.miraclesBackground)
                                     .scaleEffect(0.85)
                             }
                             Text(isSending ? "Sending..." : "Boop! 👉")
                                 .font(.system(.headline, design: .serif))
                                 .fontWeight(.bold)
-                                .foregroundStyle(Color.sunBackground)
+                                .foregroundStyle(Color.miraclesBackground)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 17)
                         .background(
                             trimmed.isEmpty
-                                ? Color.sunSecondary.opacity(0.4)
-                                : Color.sunAccent
+                                ? Color.miraclesSecondary.opacity(0.4)
+                                : Color.miraclesAccent
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                         .shadow(
                             color: trimmed.isEmpty
                                 ? .clear
-                                : Color.sunAccent.opacity(0.45),
+                                : Color.miraclesAccent.opacity(0.45),
                             radius: 10, x: 0, y: 4
                         )
                         .animation(.easeOut(duration: 0.15), value: trimmed.isEmpty)
@@ -76,13 +76,13 @@ struct BoopView: View {
                 }
                 .padding(20)
             }
-            .background(Color.sunBackground)
+            .background(Color.miraclesBackground)
             .navigationTitle("Custom Boop")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }

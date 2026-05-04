@@ -7,7 +7,7 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
@@ -15,10 +15,10 @@ struct SettingsView: View {
                     Text("My Identity")
                         .font(.system(size: 26, weight: .bold, design: .serif))
                         .fontDesign(.serif)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                     Text("Who are you?")
                         .font(.system(size: 14, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
                 .padding(.top, 40)
                 .padding(.bottom, 32)
@@ -28,19 +28,19 @@ struct SettingsView: View {
                     identityCard(
                         person: .elisa,
                         emoji: "🌸",
-                        name: "Elisa",
+                        name: MiraclesPerson.elisa.displayName,
                         subtitle: ""
                     )
                     identityCard(
                         person: .mom,
                         emoji: "🌷",
-                        name: "Mom",
+                        name: MiraclesPerson.mom.displayName,
                         subtitle: ""
                     )
                     identityCard(
                         person: .sister,
                         emoji: "🌼",
-                        name: "Sister",
+                        name: MiraclesPerson.sister.displayName,
                         subtitle: ""
                     )
                 }
@@ -51,7 +51,7 @@ struct SettingsView: View {
                 // Footer note
                 Text("You can change this anytime in the Settings tab.")
                     .font(.system(size: 12, design: .serif))
-                    .foregroundStyle(Color.sunSecondary.opacity(0.6))
+                    .foregroundStyle(Color.miraclesSecondary.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                     .padding(.bottom, 40)
@@ -82,10 +82,10 @@ struct SettingsView: View {
                     Text(name)
                         .font(.system(size: 18, weight: .bold, design: .serif))
                         .fontDesign(.serif)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                     Text(subtitle)
                         .font(.system(size: 13, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 Spacer()
@@ -93,17 +93,17 @@ struct SettingsView: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 22, design: .serif))
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                 }
             }
             .padding(18)
-            .background(Color.sunSurface)
+            .background(Color.miraclesSurface)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.sunAccent : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                    .stroke(isSelected ? Color.miraclesAccent : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
             )
-            .shadow(color: isSelected ? Color.sunAccent.opacity(0.25) : .clear, radius: 8)
+            .shadow(color: isSelected ? Color.miraclesAccent.opacity(0.25) : .clear, radius: 8)
         }
         .buttonStyle(.plain)
     }

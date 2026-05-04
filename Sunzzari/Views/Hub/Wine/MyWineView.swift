@@ -37,7 +37,7 @@ struct MyWineView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SerifNavHeader("My Wine")
@@ -63,10 +63,10 @@ struct MyWineView: View {
             if filtered.isEmpty {
                 Text("No wines match your filters")
                     .font(.system(size: 15, weight: .regular, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
-                    .listRowBackground(Color.sunBackground)
+                    .listRowBackground(Color.miraclesBackground)
                     .listRowSeparator(.hidden)
             } else {
                 ForEach(filtered) { w in
@@ -80,7 +80,7 @@ struct MyWineView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                        .listRowBackground(Color.sunBackground)
+                        .listRowBackground(Color.miraclesBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
@@ -152,13 +152,13 @@ struct MyWineView: View {
                     } label: {
                         Text("Cooking")
                             .font(.system(size: 13, weight: cookingOnly ? .semibold : .regular, design: .serif))
-                            .foregroundStyle(cookingOnly ? Color.sunAccent : Color.sunSecondary)
+                            .foregroundStyle(cookingOnly ? Color.miraclesAccent : Color.miraclesSecondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
-                            .background(cookingOnly ? Color.sunAccent.opacity(0.12) : Color.sunSurface)
+                            .background(cookingOnly ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
                             .clipShape(Capsule())
                             .overlay(Capsule().stroke(
-                                cookingOnly ? Color.sunAccent.opacity(0.8) : Color.white.opacity(0.15),
+                                cookingOnly ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
                                 lineWidth: 1
                             ))
                     }
@@ -175,7 +175,7 @@ struct MyWineView: View {
                                 Text("Clear All")
                                     .font(.system(size: 13, design: .serif))
                             }
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
                             .clipShape(Capsule())
@@ -208,18 +208,18 @@ struct MyWineView: View {
         HStack(spacing: 4) {
             Text(value ?? title)
                 .font(.system(size: 13, weight: value != nil ? .semibold : .regular, design: .serif))
-                .foregroundStyle(value != nil ? Color.sunAccent : Color.sunSecondary)
+                .foregroundStyle(value != nil ? Color.miraclesAccent : Color.miraclesSecondary)
                 .lineLimit(1)
             Image(systemName: "chevron.down")
                 .font(.system(size: 10, design: .serif))
-                .foregroundStyle(value != nil ? Color.sunAccent : Color.sunSecondary)
+                .foregroundStyle(value != nil ? Color.miraclesAccent : Color.miraclesSecondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .background(value != nil ? Color.sunAccent.opacity(0.12) : Color.sunSurface)
+        .background(value != nil ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
         .clipShape(Capsule())
         .overlay(Capsule().stroke(
-            value != nil ? Color.sunAccent.opacity(0.8) : Color.white.opacity(0.15),
+            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
             lineWidth: 1
         ))
     }

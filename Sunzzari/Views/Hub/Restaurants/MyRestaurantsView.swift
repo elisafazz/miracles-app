@@ -61,7 +61,7 @@ struct MyRestaurantsView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SerifNavHeader("My Restaurants")
@@ -85,9 +85,9 @@ struct MyRestaurantsView: View {
                     NavigationLink(destination: RestaurantMapView(restaurants: filtered)) {
                         Image(systemName: "map.fill")
                             .font(.system(size: 16, design: .serif))
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                             .padding(14)
-                            .background(Color.sunSurface)
+                            .background(Color.miraclesSurface)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
                     }
@@ -110,10 +110,10 @@ struct MyRestaurantsView: View {
             if filtered.isEmpty {
                 Text("No restaurants match your filters")
                     .font(.system(size: 15, weight: .regular, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
-                    .listRowBackground(Color.sunBackground)
+                    .listRowBackground(Color.miraclesBackground)
                     .listRowSeparator(.hidden)
             } else {
                 ForEach(filtered) { r in
@@ -127,7 +127,7 @@ struct MyRestaurantsView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                        .listRowBackground(Color.sunBackground)
+                        .listRowBackground(Color.miraclesBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
@@ -144,11 +144,11 @@ struct MyRestaurantsView: View {
         HStack(spacing: 10) {
             Image(systemName: "sparkles")
                 .font(.system(size: 14, design: .serif))
-                .foregroundStyle(Color.sunAccent)
+                .foregroundStyle(Color.miraclesAccent)
 
             TextField("Ask Claude...", text: $claudeQuery)
                 .font(.system(size: 14, design: .serif))
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
                 .focused($claudeFieldFocused)
                 .submitLabel(.search)
                 .onSubmit { Task { await runClaudeSearch() } }
@@ -161,7 +161,7 @@ struct MyRestaurantsView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             } else if !claudeQuery.isEmpty {
                 // no-op placeholder: kept structure for readability
@@ -174,14 +174,14 @@ struct MyRestaurantsView: View {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 20, design: .serif))
                     .foregroundStyle(claudeQuery.trimmingCharacters(in: .whitespaces).isEmpty
-                                     ? Color.sunSecondary
-                                     : Color.sunAccent)
+                                     ? Color.miraclesSecondary
+                                     : Color.miraclesAccent)
             }
             .disabled(claudeQuery.trimmingCharacters(in: .whitespaces).isEmpty || isSearching)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.sunSurface)
+        .background(Color.miraclesSurface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 16)
         .padding(.top, 10)
@@ -195,7 +195,7 @@ struct MyRestaurantsView: View {
                     .foregroundStyle(.red)
                 Text(err)
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 Spacer()
             }
             .padding(.horizontal, 16)
@@ -204,20 +204,20 @@ struct MyRestaurantsView: View {
         } else if let ids = claudeResults {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color.sunAccent)
+                    .foregroundStyle(Color.miraclesAccent)
                 Text(ids.isEmpty
                      ? "Claude couldn't find a match"
                      : "Claude found \(ids.count) match\(ids.count == 1 ? "" : "es")")
                     .font(.system(.caption, design: .serif, weight: .semibold))
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 Spacer()
                 Button("Clear") { clearClaudeSearch() }
                     .font(.system(.caption, design: .serif, weight: .semibold))
-                    .foregroundStyle(Color.sunAccent)
+                    .foregroundStyle(Color.miraclesAccent)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color.sunAccent.opacity(0.08))
+            .background(Color.miraclesAccent.opacity(0.08))
         }
     }
 
@@ -331,7 +331,7 @@ struct MyRestaurantsView: View {
                             Text("Clear All")
                                 .font(.system(size: 13, design: .serif))
                         }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .clipShape(Capsule())
@@ -363,18 +363,18 @@ struct MyRestaurantsView: View {
         HStack(spacing: 4) {
             Text(value ?? title)
                 .font(.system(size: 13, weight: value != nil ? .semibold : .regular, design: .serif))
-                .foregroundStyle(value != nil ? Color.sunAccent : Color.sunSecondary)
+                .foregroundStyle(value != nil ? Color.miraclesAccent : Color.miraclesSecondary)
                 .lineLimit(1)
             Image(systemName: "chevron.down")
                 .font(.system(size: 10, design: .serif))
-                .foregroundStyle(value != nil ? Color.sunAccent : Color.sunSecondary)
+                .foregroundStyle(value != nil ? Color.miraclesAccent : Color.miraclesSecondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .background(value != nil ? Color.sunAccent.opacity(0.12) : Color.sunSurface)
+        .background(value != nil ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
         .clipShape(Capsule())
         .overlay(Capsule().stroke(
-            value != nil ? Color.sunAccent.opacity(0.8) : Color.white.opacity(0.15),
+            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
             lineWidth: 1
         ))
     }

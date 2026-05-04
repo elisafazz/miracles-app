@@ -26,7 +26,7 @@ struct MyActivitiesView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SerifNavHeader("My Activities")
@@ -52,10 +52,10 @@ struct MyActivitiesView: View {
             if filtered.isEmpty {
                 Text("No activities match your filters")
                     .font(.system(size: 15, weight: .regular, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 40)
-                    .listRowBackground(Color.sunBackground)
+                    .listRowBackground(Color.miraclesBackground)
                     .listRowSeparator(.hidden)
             } else {
                 ForEach(filtered) { a in
@@ -69,7 +69,7 @@ struct MyActivitiesView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                        .listRowBackground(Color.sunBackground)
+                        .listRowBackground(Color.miraclesBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
@@ -100,7 +100,7 @@ struct MyActivitiesView: View {
                             Text("Clear All")
                                 .font(.system(size: 13, design: .serif))
                         }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .clipShape(Capsule())
@@ -123,11 +123,11 @@ struct MyActivitiesView: View {
                 .tracking(0.8)
                 .padding(.horizontal, 9)
                 .padding(.vertical, 4)
-                .background(isOn.wrappedValue ? Color.sunAccent.opacity(0.12) : Color.clear)
-                .foregroundStyle(isOn.wrappedValue ? Color.sunAccent : Color.sunSecondary)
+                .background(isOn.wrappedValue ? Color.miraclesAccent.opacity(0.12) : Color.clear)
+                .foregroundStyle(isOn.wrappedValue ? Color.miraclesAccent : Color.miraclesSecondary)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(isOn.wrappedValue ? Color.sunAccent.opacity(1) : Color.white.opacity(0.2), lineWidth: 1))
-                .shadow(color: isOn.wrappedValue ? Color.sunAccent.opacity(0.4) : .clear, radius: 6, y: 0)
+                .overlay(Capsule().stroke(isOn.wrappedValue ? Color.miraclesAccent.opacity(1) : Color.white.opacity(0.2), lineWidth: 1))
+                .shadow(color: isOn.wrappedValue ? Color.miraclesAccent.opacity(0.4) : .clear, radius: 6, y: 0)
         }
     }
 

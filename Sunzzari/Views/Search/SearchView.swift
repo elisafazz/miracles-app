@@ -20,7 +20,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     SerifNavHeader("Search", showsBack: false)
@@ -62,7 +62,7 @@ struct SearchView: View {
             Section {
                 ForEach(filteredBestOf) { entry in
                     BestOfEntryCard(entry: entry)
-                        .listRowBackground(Color.sunBackground)
+                        .listRowBackground(Color.miraclesBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
@@ -78,10 +78,10 @@ struct SearchView: View {
         VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 42, design: .serif))
-                .foregroundStyle(Color.sunSecondary.opacity(0.35))
+                .foregroundStyle(Color.miraclesSecondary.opacity(0.35))
             Text("Search across Best Of")
                 .font(.system(size: 15, weight: .regular, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
@@ -92,7 +92,7 @@ struct SearchView: View {
         Text(text)
             .font(.system(size: 10, weight: .bold, design: .serif))
             .tracking(1)
-            .foregroundStyle(Color.sunSecondary)
+            .foregroundStyle(Color.miraclesSecondary)
             .textCase(nil)
             .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
     }

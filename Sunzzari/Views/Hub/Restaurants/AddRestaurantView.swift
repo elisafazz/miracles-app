@@ -21,7 +21,7 @@ struct AddRestaurantView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -31,16 +31,16 @@ struct AddRestaurantView: View {
                         formField(label: "Name", icon: "fork.knife") {
                             TextField("Restaurant name", text: $name)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Been There?", icon: "checkmark.circle") {
                             Toggle("", isOn: $beenThere.animation())
-                                .tint(.sunAccent)
+                                .tint(.miraclesAccent)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
@@ -59,12 +59,12 @@ struct AddRestaurantView: View {
                                                 .background(
                                                     preference == pref
                                                         ? Color(hex: pref.colorHex).opacity(0.25)
-                                                        : Color.sunSurface
+                                                        : Color.miraclesSurface
                                                 )
                                                 .foregroundStyle(
                                                     preference == pref
                                                         ? Color(hex: pref.colorHex)
-                                                        : Color.sunSecondary
+                                                        : Color.miraclesSecondary
                                                 )
                                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                                 .overlay(
@@ -90,19 +90,19 @@ struct AddRestaurantView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            .tint(Color.sunAccent)
+                            .tint(Color.miraclesAccent)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            .background(Color.sunSurface)
+                            .background(Color.miraclesSurface)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
                         formField(label: "Neighborhood", icon: "building.2") {
                             TextField("e.g. Silver Lake, West Village", text: $neighborhood)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Good For", icon: "tag") {
@@ -121,13 +121,13 @@ struct AddRestaurantView: View {
                                             .padding(.vertical, 8)
                                             .background(
                                                 selectedGoodFor.contains(tag)
-                                                    ? Color.sunAccent.opacity(0.2)
-                                                    : Color.sunSurface
+                                                    ? Color.miraclesAccent.opacity(0.2)
+                                                    : Color.miraclesSurface
                                             )
                                             .foregroundStyle(
                                                 selectedGoodFor.contains(tag)
-                                                    ? Color.sunAccent
-                                                    : Color.sunSecondary
+                                                    ? Color.miraclesAccent
+                                                    : Color.miraclesSecondary
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
@@ -139,18 +139,18 @@ struct AddRestaurantView: View {
                             TextField("Dishes worth ordering...", text: $topDishes, axis: .vertical)
                                 .lineLimit(3...5)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Comments (optional)", icon: "note.text") {
                             TextField("Notes, vibes, context...", text: $comments, axis: .vertical)
                                 .lineLimit(3...5)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         if let errorMessage {
@@ -159,14 +159,14 @@ struct AddRestaurantView: View {
 
                         Button { Task { await save() } } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Restaurant")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(name.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(name.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(name.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(name.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(name.isEmpty || isSaving)
@@ -178,7 +178,7 @@ struct AddRestaurantView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -191,14 +191,14 @@ struct AddRestaurantView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Autofill with AI", systemImage: "sparkles")
                     .font(.system(.caption, design: .serif, weight: .semibold))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
 
                 HStack(spacing: 10) {
                     TextField("e.g. Bestia, Los Angeles", text: $aiQuery)
                         .padding()
-                        .background(Color.sunSurface)
+                        .background(Color.miraclesSurface)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .onSubmit { Task { await autofill() } }
 
                     Button {
@@ -206,15 +206,15 @@ struct AddRestaurantView: View {
                     } label: {
                         Group {
                             if isAILoading {
-                                ProgressView().tint(Color.sunAccent)
+                                ProgressView().tint(Color.miraclesAccent)
                             } else {
                                 Image(systemName: "sparkles")
                                     .font(.system(size: 18, weight: .semibold, design: .serif))
-                                    .foregroundStyle(aiQuery.isEmpty ? Color.sunSecondary : Color.sunAccent)
+                                    .foregroundStyle(aiQuery.isEmpty ? Color.miraclesSecondary : Color.miraclesAccent)
                             }
                         }
                         .frame(width: 50, height: 50)
-                        .background(Color.sunSurface)
+                        .background(Color.miraclesSurface)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .disabled(aiQuery.isEmpty || isAILoading)
@@ -232,7 +232,7 @@ struct AddRestaurantView: View {
                 Color.white.opacity(0.15).frame(height: 0.5)
                 Text("or fill manually")
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .fixedSize()
                     .padding(.horizontal, 8)
                 Color.white.opacity(0.15).frame(height: 0.5)
@@ -270,7 +270,7 @@ struct AddRestaurantView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(label, systemImage: icon)
                 .font(.system(.caption, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
             content()
         }
     }

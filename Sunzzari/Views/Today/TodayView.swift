@@ -34,7 +34,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     PageHeader(headerDateString) {
@@ -43,7 +43,7 @@ struct TodayView: View {
                         } label: {
                             Image(systemName: "square.and.pencil")
                                 .font(.system(size: 16, weight: .semibold, design: .serif))
-                                .foregroundStyle(Color.sunAccent)
+                                .foregroundStyle(Color.miraclesAccent)
                                 .padding(8)
                                 .background(Color.white.opacity(0.08))
                                 .clipShape(Circle())
@@ -65,7 +65,7 @@ struct TodayView: View {
                             // BOOPS (one-tap) — always rendered, including NYD
                             Section {
                                 boopGrid
-                                    .listRowBackground(Color.sunBackground)
+                                    .listRowBackground(Color.miraclesBackground)
                                     .listRowSeparator(.hidden)
                                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 12, trailing: 16))
                             } header: {
@@ -101,7 +101,7 @@ struct TodayView: View {
                                             }
                                             .tint(.orange)
                                         }
-                                        .listRowBackground(Color.sunBackground)
+                                        .listRowBackground(Color.miraclesBackground)
                                         .listRowSeparator(.hidden)
                                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
                                 } header: {
@@ -113,10 +113,10 @@ struct TodayView: View {
                                 Section {
                                     Text("Nothing to show today — check back later!")
                                         .font(.system(.subheadline, design: .serif))
-                                        .foregroundStyle(Color.sunSecondary)
+                                        .foregroundStyle(Color.miraclesSecondary)
                                         .padding(.vertical, 20)
                                         .frame(maxWidth: .infinity, alignment: .center)
-                                        .listRowBackground(Color.sunBackground)
+                                        .listRowBackground(Color.miraclesBackground)
                                         .listRowSeparator(.hidden)
                                 }
                             }
@@ -131,12 +131,12 @@ struct TodayView: View {
                 if let msg = toastMessage {
                     Text(msg)
                         .font(.system(size: 13, weight: .semibold, design: .serif))
-                        .foregroundStyle(Color.sunBackground)
+                        .foregroundStyle(Color.miraclesBackground)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(Color.sunAccent)
+                        .background(Color.miraclesAccent)
                         .clipShape(Capsule())
-                        .shadow(color: Color.sunAccent.opacity(0.45), radius: 10, x: 0, y: 4)
+                        .shadow(color: Color.miraclesAccent.opacity(0.45), radius: 10, x: 0, y: 4)
                         .padding(.top, 8)
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
@@ -203,7 +203,7 @@ struct TodayView: View {
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.sunSurface)
+                    .fill(Color.miraclesSurface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -211,11 +211,11 @@ struct TodayView: View {
 
                 if sendingBoop == preset {
                     ProgressView()
-                        .tint(Color.sunAccent)
+                        .tint(Color.miraclesAccent)
                 } else {
                     Text(preset)
                         .font(.system(size: 12, weight: .semibold, design: .serif))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .multilineTextAlignment(.center)
                         .lineLimit(3)
                         .minimumScaleFactor(0.7)
@@ -280,7 +280,7 @@ struct TodayView: View {
                 }
                 .tint(.orange)
             }
-            .listRowBackground(Color.sunBackground)
+            .listRowBackground(Color.miraclesBackground)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
@@ -302,17 +302,17 @@ struct TodayView: View {
                 .font(.system(size: 72, design: .serif))
             Text("Happy New Year")
                 .font(.system(size: 28, weight: .bold, design: .serif))
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
             Text(String(newYear))
                 .font(.system(size: 20, weight: .semibold, design: .serif))
-                .foregroundStyle(Color.sunAccent)
+                .foregroundStyle(Color.miraclesAccent)
             Text("See you on the other side")
                 .font(.system(size: 14, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
-        .listRowBackground(Color.sunBackground)
+        .listRowBackground(Color.miraclesBackground)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
     }
@@ -327,7 +327,7 @@ struct TodayView: View {
         Text(label)
             .font(.system(size: 11, weight: .bold, design: .serif))
             .tracking(1.2)
-            .foregroundStyle(accent ? Color.sunAccent : Color.sunSecondary)
+            .foregroundStyle(accent ? Color.miraclesAccent : Color.miraclesSecondary)
             .textCase(nil)
             .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
     }
@@ -343,25 +343,25 @@ struct TodayView: View {
                     Text(String(entry.year))
                         .font(.system(size: 10, weight: .bold, design: .serif))
                         .tracking(0.8)
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
 
             Text(entry.entry)
                 .font(.system(size: 16, weight: .bold, design: .serif))
                 .fontDesign(.serif)
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if !entry.notes.isEmpty {
                 Text(entry.notes)
                     .font(.system(size: 13, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .lineLimit(3)
             }
         }
         .padding(16)
-        .background(Color.sunSurface)
+        .background(Color.miraclesSurface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 

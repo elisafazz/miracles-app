@@ -8,7 +8,7 @@ struct CategoryChip: View {
     var body: some View {
         Text(label)
             .font(.system(size: 11, weight: .medium, design: .serif))
-            .foregroundStyle(isSelected ? Color.sunBackground : Color(hex: colorHex))
+            .foregroundStyle(isSelected ? Color.miraclesBackground : Color(hex: colorHex))
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(

@@ -14,7 +14,7 @@ struct WineCardView: View {
                     Text(wine.wineName)
                         .font(.system(size: 15, weight: .bold, design: .serif))
                         .fontDesign(.serif)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .lineLimit(2)
 
                     Spacer()
@@ -34,7 +34,7 @@ struct WineCardView: View {
                 if !producerVintage.isEmpty {
                     Text(producerVintage)
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 HStack(spacing: 6) {
@@ -52,17 +52,17 @@ struct WineCardView: View {
                     if !wine.region.isEmpty {
                         Text(wine.region)
                             .font(.system(.caption, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
 
                     if wine.useForCooking {
                         Text("COOKING")
                             .font(.system(size: 9, weight: .bold, design: .serif))
                             .tracking(0.5)
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
-                            .background(Color.sunAccent.opacity(0.15))
+                            .background(Color.miraclesAccent.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                 }
@@ -70,6 +70,6 @@ struct WineCardView: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
         }
-        .background(Color.sunBackground)
+        .background(Color.miraclesBackground)
     }
 }

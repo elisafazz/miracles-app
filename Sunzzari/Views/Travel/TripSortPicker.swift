@@ -34,10 +34,10 @@ struct TripSortPicker: View {
                 Text(nearMeActive ? "Distance" : sortMode.rawValue)
             }
             .font(.system(.caption2, design: .serif, weight: .medium))
-            .foregroundStyle(Color.sunText)
+            .foregroundStyle(Color.miraclesText)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(Color.sunSurface)
+            .background(Color.miraclesSurface)
             .clipShape(Capsule())
         }
     }

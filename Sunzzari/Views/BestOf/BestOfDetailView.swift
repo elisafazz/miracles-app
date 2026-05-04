@@ -29,45 +29,45 @@ struct BestOfDetailView: View {
                             } label: {
                                 Image(systemName: "pencil")
                                     .font(.system(size: 12, weight: .bold, design: .serif))
-                                    .foregroundStyle(Color.sunAccent)
+                                    .foregroundStyle(Color.miraclesAccent)
                                     .frame(width: 28, height: 28)
-                                    .background(Color.sunBackground.opacity(0.9))
+                                    .background(Color.miraclesBackground.opacity(0.9))
                                     .clipShape(Circle())
                             }
                         }
                         Button { onDismiss() } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 12, weight: .bold, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                                 .frame(width: 28, height: 28)
-                                .background(Color.sunBackground.opacity(0.9))
+                                .background(Color.miraclesBackground.opacity(0.9))
                                 .clipShape(Circle())
                         }
                     }
 
                     Text(entry.entry)
                         .font(.system(size: 26, weight: .bold, design: .serif))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
 
                     if !entry.isUnassigned {
                         Text(entry.isYearOnly
                              ? String(entry.year)
                              : entry.date.formatted(.dateTime.month(.wide).day().year()))
                             .font(.system(size: 13, weight: .medium, design: .serif))
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                     }
 
                     if !entry.notes.isEmpty {
-                        Color.sunBackground.opacity(0.4).frame(height: 0.5)
+                        Color.miraclesBackground.opacity(0.4).frame(height: 0.5)
                         Text(entry.notes)
                             .font(.system(size: 15, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .matchedGeometryEffect(id: entry.id, in: namespace)
                 .padding(.horizontal, 16)

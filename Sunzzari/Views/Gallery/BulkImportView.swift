@@ -13,7 +13,7 @@ struct BulkImportView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 24) {
                     if uploadStates.isEmpty {
@@ -22,15 +22,15 @@ struct BulkImportView: View {
                             Spacer()
                             Image(systemName: "photo.stack.fill")
                                 .font(.system(size: 64, design: .serif))
-                                .foregroundStyle(Color.sunAccent)
+                                .foregroundStyle(Color.miraclesAccent)
 
                             Text("Select Photos")
                                 .font(.system(.title2, design: .serif, weight: .bold))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
 
                             Text("Choose as many photos as you want.\nThey'll all upload automatically.")
                                 .font(.system(.subheadline, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                                 .multilineTextAlignment(.center)
 
                             PhotosPicker(
@@ -40,10 +40,10 @@ struct BulkImportView: View {
                             ) {
                                 Label("Choose Photos", systemImage: "photo.on.rectangle.angled")
                                     .font(.system(.headline, design: .serif))
-                                    .foregroundStyle(Color.sunBackground)
+                                    .foregroundStyle(Color.miraclesBackground)
                                     .frame(maxWidth: .infinity)
                                     .padding()
-                                    .background(Color.sunAccent)
+                                    .background(Color.miraclesAccent)
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
                                     .padding(.horizontal, 32)
                             }
@@ -63,10 +63,10 @@ struct BulkImportView: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Uploading \(uploadStates.count) photos")
                                             .font(.system(.headline, design: .serif))
-                                            .foregroundStyle(Color.sunText)
+                                            .foregroundStyle(Color.miraclesText)
                                         Text("\(doneCount) of \(uploadStates.count) complete")
                                             .font(.system(.caption, design: .serif))
-                                            .foregroundStyle(Color.sunSecondary)
+                                            .foregroundStyle(Color.miraclesSecondary)
                                     }
                                     Spacer()
                                     if isDone {
@@ -76,7 +76,7 @@ struct BulkImportView: View {
                                     }
                                 }
                                 .padding(16)
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .padding(.horizontal, 16)
                                 .padding(.top, 16)
@@ -85,10 +85,10 @@ struct BulkImportView: View {
                                 GeometryReader { geo in
                                     ZStack(alignment: .leading) {
                                         RoundedRectangle(cornerRadius: 4)
-                                            .fill(Color.sunSurface)
+                                            .fill(Color.miraclesSurface)
                                             .frame(height: 6)
                                         RoundedRectangle(cornerRadius: 4)
-                                            .fill(Color.sunAccent)
+                                            .fill(Color.miraclesAccent)
                                             .frame(width: geo.size.width * progress, height: 6)
                                             .animation(.easeInOut, value: progress)
                                     }
@@ -116,10 +116,10 @@ struct BulkImportView: View {
                             } label: {
                                 Text("Done - View Gallery")
                                     .font(.system(.headline, design: .serif))
-                                    .foregroundStyle(Color.sunBackground)
+                                    .foregroundStyle(Color.miraclesBackground)
                                     .frame(maxWidth: .infinity)
                                     .padding()
-                                    .background(Color.sunAccent)
+                                    .background(Color.miraclesAccent)
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
                                     .padding(.horizontal, 16)
                             }
@@ -134,7 +134,7 @@ struct BulkImportView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     if !isUploading {
                         Button("Cancel") { dismiss() }
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
                 }
             }
@@ -220,9 +220,9 @@ private struct UploadRow: View {
                 switch state.status {
                 case .pending:
                     Image(systemName: "circle")
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 case .uploading:
-                    ProgressView().tint(.sunAccent).scaleEffect(0.8)
+                    ProgressView().tint(.miraclesAccent).scaleEffect(0.8)
                 case .done:
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
@@ -235,16 +235,16 @@ private struct UploadRow: View {
 
             Text("Photo \(index)")
                 .font(.system(.subheadline, design: .serif))
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
 
             Spacer()
 
             Text(state.status.label)
                 .font(.system(.caption, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
         }
         .padding(12)
-        .background(Color.sunSurface)
+        .background(Color.miraclesSurface)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

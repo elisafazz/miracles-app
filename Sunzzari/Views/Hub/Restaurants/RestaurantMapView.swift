@@ -150,7 +150,7 @@ struct RestaurantMKMap: UIViewRepresentable {
                     withIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier,
                     for: cluster
                 ) as! MKMarkerAnnotationView
-                v.markerTintColor = UIColor(red: 0.984, green: 0.749, blue: 0.141, alpha: 1) // #FBBF24
+                v.markerTintColor = UIColor(red: 0.831, green: 0.506, blue: 0.357, alpha: 1) // #D4815B miraclesAccent
                 v.glyphText = "\(cluster.memberAnnotations.count)"
                 v.titleVisibility = .hidden
                 v.subtitleVisibility = .hidden
@@ -366,16 +366,16 @@ struct RestaurantMapView: View {
                 Text(label)
                     .font(.system(size: 12, weight: .medium, design: .serif))
             }
-            .foregroundStyle(isActive ? Color.sunBackground : Color.white.opacity(0.75))
+            .foregroundStyle(isActive ? Color.miraclesBackground : Color.white.opacity(0.75))
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(isActive ? Color.sunAccent : Color.white.opacity(0.08))
+            .background(isActive ? Color.miraclesAccent : Color.white.opacity(0.08))
             .clipShape(Capsule())
             .overlay(Capsule().stroke(
-                isActive ? Color.sunAccent : Color.white.opacity(0.2),
+                isActive ? Color.miraclesAccent : Color.white.opacity(0.2),
                 lineWidth: 1
             ))
-            .shadow(color: isActive ? Color.sunAccent.opacity(0.45) : .clear, radius: 6)
+            .shadow(color: isActive ? Color.miraclesAccent.opacity(0.45) : .clear, radius: 6)
         }
         .buttonStyle(.plain)
     }
@@ -460,9 +460,9 @@ struct RestaurantMapView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(.ultraThinMaterial)
-        .background(Color(hex: "#030712").opacity(0.75))
+        .background(Color.miraclesSurface.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.miraclesText.opacity(0.1), lineWidth: 1))
     }
 
     // MARK: - Locate Me button
@@ -475,9 +475,9 @@ struct RestaurantMapView: View {
         } label: {
             Image(systemName: "location.fill")
                 .font(.system(size: 16, design: .serif))
-                .foregroundStyle(Color.sunAccent)
+                .foregroundStyle(Color.miraclesAccent)
                 .padding(13)
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(Circle())
                 .shadow(color: .black.opacity(0.5), radius: 8, y: 3)
         }
@@ -487,7 +487,7 @@ struct RestaurantMapView: View {
 
     private func restaurantCallout(_ r: Restaurant) -> some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     if let pref = r.preference {
@@ -515,12 +515,12 @@ struct RestaurantMapView: View {
                 Text(r.name)
                     .font(.system(size: 20, weight: .bold, design: .serif))
                     .fontDesign(.serif)
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 let loc = [r.location, r.neighborhood].filter { !$0.isEmpty }.joined(separator: " · ")
                 if !loc.isEmpty {
                     Text(loc)
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
             .padding(24)

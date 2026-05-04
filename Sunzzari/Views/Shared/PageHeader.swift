@@ -16,7 +16,7 @@ struct PageHeader<Trailing: View>: View {
                 Text(title)
                     .font(.system(size: 22, weight: .bold, design: .serif))
                     .fontDesign(.serif)
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 Spacer()
                 trailing
             }

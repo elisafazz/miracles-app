@@ -39,7 +39,7 @@ struct EditEntryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -47,9 +47,9 @@ struct EditEntryView: View {
                         formField(label: "Entry", icon: "star") {
                             TextField("e.g. Il Latini, Florence", text: $entryText)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Category", icon: "tag") {
@@ -70,12 +70,12 @@ struct EditEntryView: View {
                                         .background(
                                             category == cat
                                                 ? Color(hex: cat.colorHex).opacity(0.25)
-                                                : Color.sunSurface
+                                                : Color.miraclesSurface
                                         )
                                         .foregroundStyle(
                                             category == cat
                                                 ? Color(hex: cat.colorHex)
-                                                : Color.sunSecondary
+                                                : Color.miraclesSecondary
                                         )
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                         .overlay(
@@ -99,11 +99,11 @@ struct EditEntryView: View {
                                          ? date.formatted(.dateTime.month(.wide).day().year())
                                          : "Year only — \(selectedYear)")
                                         .font(.system(.subheadline, design: .serif))
-                                        .foregroundStyle(Color.sunText)
+                                        .foregroundStyle(Color.miraclesText)
                                 }
-                                .tint(.sunAccent)
+                                .tint(.miraclesAccent)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
                                 if !hasDate {
@@ -115,17 +115,17 @@ struct EditEntryView: View {
                                     .pickerStyle(.segmented)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 10)
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
 
                                 if hasDate {
                                     DatePicker("", selection: $date, in: ...Date(), displayedComponents: .date)
                                         .datePickerStyle(.graphical)
-                                        .tint(.sunAccent)
+                                        .tint(.miraclesAccent)
                                         .padding(.horizontal)
                                         .padding(.bottom)
-                                        .background(Color.sunSurface)
+                                        .background(Color.miraclesSurface)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
                             }
@@ -135,9 +135,9 @@ struct EditEntryView: View {
                             TextField("Any context or story behind this?", text: $notes, axis: .vertical)
                                 .lineLimit(3...5)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         if let errorMessage {
@@ -148,14 +148,14 @@ struct EditEntryView: View {
                             Task { await save() }
                         } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Changes")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(entryText.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(entryText.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(entryText.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(entryText.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(entryText.isEmpty || isSaving)
@@ -167,7 +167,7 @@ struct EditEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -177,7 +177,7 @@ struct EditEntryView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(label, systemImage: icon)
                 .font(.system(.caption, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
             content()
         }
     }

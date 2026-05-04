@@ -27,7 +27,7 @@ struct AddWineView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -37,9 +37,9 @@ struct AddWineView: View {
                         formField(label: "Wine Name", icon: "wineglass") {
                             TextField("e.g. Gevrey-Chambertin 1er Cru", text: $wineName)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Wine Type", icon: "drop") {
@@ -56,12 +56,12 @@ struct AddWineView: View {
                                             .background(
                                                 wineType == type
                                                     ? Color(hex: type.colorHex).opacity(0.25)
-                                                    : Color.sunSurface
+                                                    : Color.miraclesSurface
                                             )
                                             .foregroundStyle(
                                                 wineType == type
                                                     ? Color(hex: type.colorHex)
-                                                    : Color.sunSecondary
+                                                    : Color.miraclesSecondary
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
                                             .overlay(
@@ -79,9 +79,9 @@ struct AddWineView: View {
                         formField(label: "Producer (optional)", icon: "building.columns") {
                             TextField("Producer or winery", text: $producer)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         HStack(spacing: 12) {
@@ -89,26 +89,26 @@ struct AddWineView: View {
                                 TextField("e.g. 2019", text: $vintageText)
                                     .keyboardType(.numberPad)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
                             }
                             formField(label: "Cost (optional)", icon: "dollarsign") {
                                 TextField("0.00", text: $costText)
                                     .keyboardType(.decimalPad)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
                             }
                         }
 
                         formField(label: "Region (optional)", icon: "map") {
                             TextField("e.g. Burgundy, Tuscany", text: $region)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Purchase Location (optional)", icon: "cart") {
@@ -119,10 +119,10 @@ struct AddWineView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            .tint(Color.sunAccent)
+                            .tint(Color.miraclesAccent)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            .background(Color.sunSurface)
+                            .background(Color.miraclesSurface)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
@@ -139,8 +139,8 @@ struct AddWineView: View {
                                             .padding(.vertical, 6)
                                             .background(
                                                 rating == r
-                                                    ? Color.sunAccent.opacity(0.2)
-                                                    : Color.sunSurface
+                                                    ? Color.miraclesAccent.opacity(0.2)
+                                                    : Color.miraclesSurface
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
@@ -150,9 +150,9 @@ struct AddWineView: View {
 
                         formField(label: "Use for Cooking", icon: "flame") {
                             Toggle("", isOn: $useForCooking)
-                                .tint(.sunAccent)
+                                .tint(.miraclesAccent)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
@@ -160,9 +160,9 @@ struct AddWineView: View {
                             TextField("Tasting notes, food pairing...", text: $notes, axis: .vertical)
                                 .lineLimit(3...5)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         if let errorMessage {
@@ -171,14 +171,14 @@ struct AddWineView: View {
 
                         Button { Task { await save() } } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Wine")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(wineName.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(wineName.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(wineName.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(wineName.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(wineName.isEmpty || isSaving)
@@ -190,7 +190,7 @@ struct AddWineView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -222,14 +222,14 @@ struct AddWineView: View {
         VStack(spacing: 10) {
             if isAILoading {
                 HStack(spacing: 10) {
-                    ProgressView().tint(Color.sunAccent)
+                    ProgressView().tint(Color.miraclesAccent)
                     Text("Claude is reading the label...")
                         .font(.system(size: 14, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 Button { showSourceDialog = true } label: {
@@ -241,10 +241,10 @@ struct AddWineView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.sunAccent.opacity(0.12))
-                    .foregroundStyle(Color.sunAccent)
+                    .background(Color.miraclesAccent.opacity(0.12))
+                    .foregroundStyle(Color.miraclesAccent)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.sunAccent.opacity(0.4), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.miraclesAccent.opacity(0.4), lineWidth: 1))
                 }
             }
 
@@ -259,7 +259,7 @@ struct AddWineView: View {
                 Color.white.opacity(0.15).frame(height: 0.5)
                 Text("or fill manually")
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                     .fixedSize()
                     .padding(.horizontal, 8)
                 Color.white.opacity(0.15).frame(height: 0.5)
@@ -293,7 +293,7 @@ struct AddWineView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(label, systemImage: icon)
                 .font(.system(.caption, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
             content()
         }
     }

@@ -13,8 +13,8 @@ struct AsyncImageView: View {
                 switch phase {
                 case .empty:
                     Rectangle()
-                        .fill(Color.sunSurface)
-                        .overlay(ProgressView().tint(.sunSecondary))
+                        .fill(Color.miraclesSurface)
+                        .overlay(ProgressView().tint(.miraclesSecondary))
                 case .success(let image):
                     image
                         .resizable()
@@ -46,11 +46,11 @@ struct AsyncImageView: View {
 
     private var placeholderView: some View {
         Rectangle()
-            .fill(Color.sunSurface)
+            .fill(Color.miraclesSurface)
             .overlay(
                 Image(systemName: "photo")
                     .font(.system(.title2, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
             )
     }
 }

@@ -15,7 +15,7 @@ struct AddActivityView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -23,60 +23,60 @@ struct AddActivityView: View {
                         formField(label: "Name", icon: "figure.run") {
                             TextField("Activity name", text: $name)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Location (optional)", icon: "mappin") {
                             TextField("Where is this?", text: $location)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         formField(label: "Status", icon: "tag") {
                             VStack(spacing: 8) {
                                 Toggle("Active?", isOn: $active)
-                                    .tint(.sunAccent)
+                                    .tint(.miraclesAccent)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
 
                                 Toggle("Seasonal?", isOn: $seasonal)
-                                    .tint(.sunAccent)
+                                    .tint(.miraclesAccent)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
 
                                 Toggle("Home?", isOn: $home)
-                                    .tint(.sunAccent)
+                                    .tint(.miraclesAccent)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
                             }
                         }
 
                         formField(label: "Date", icon: "calendar") {
                             VStack(spacing: 0) {
                                 Toggle("Date-Specific?", isOn: $dateSpecific.animation())
-                                    .tint(.sunAccent)
+                                    .tint(.miraclesAccent)
                                     .padding()
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
 
                                 if dateSpecific {
                                     DatePicker("", selection: $dateActive, displayedComponents: .date)
                                         .datePickerStyle(.graphical)
-                                        .tint(.sunAccent)
+                                        .tint(.miraclesAccent)
                                         .padding(.horizontal)
                                         .padding(.bottom)
-                                        .background(Color.sunSurface)
+                                        .background(Color.miraclesSurface)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
                             }
@@ -88,14 +88,14 @@ struct AddActivityView: View {
 
                         Button { Task { await save() } } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Activity")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(name.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(name.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(name.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(name.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(name.isEmpty || isSaving)
@@ -107,7 +107,7 @@ struct AddActivityView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -117,7 +117,7 @@ struct AddActivityView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(label, systemImage: icon)
                 .font(.system(.caption, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
             content()
         }
     }

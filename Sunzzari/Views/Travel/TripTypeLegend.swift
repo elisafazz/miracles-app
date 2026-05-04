@@ -10,7 +10,7 @@ struct TripTypeLegend: View {
             Text("Filter type")
                 .font(.system(.caption2, design: .serif, weight: .semibold))
                 .textCase(.uppercase)
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
 
             ForEach(TripItem.ItemType.allCases, id: \.self) { type in
                 let isActive = activeTypes.contains(type)
@@ -43,7 +43,7 @@ struct TripTypeLegend: View {
                             .font(.system(.caption, design: .serif))
                             .fontWeight(isActive ? .semibold : .medium)
                     }
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                     .opacity(dimmed ? 0.3 : 1.0)
                 }
                 .buttonStyle(.plain)
@@ -55,7 +55,7 @@ struct TripTypeLegend: View {
                 } label: {
                     Text("Clear")
                         .font(.system(.caption2, design: .serif, weight: .medium))
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                         .underline()
                 }
                 .padding(.top, 2)

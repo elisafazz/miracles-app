@@ -27,7 +27,7 @@ struct BestOfView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     SerifNavHeader("Best Of", showsBack: false)
@@ -110,10 +110,10 @@ struct BestOfView: View {
                 if current.isEmpty {
                     Text("Nothing yet for 2026 — add your first entry!")
                         .font(.system(size: 15, weight: .regular, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 20)
-                        .listRowBackground(Color.sunBackground)
+                        .listRowBackground(Color.miraclesBackground)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 } else {
@@ -128,8 +128,8 @@ struct BestOfView: View {
                         if yearEntries.isEmpty {
                             Text("No entries in this category")
                                 .font(.system(size: 15, weight: .regular, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
-                                .listRowBackground(Color.sunBackground)
+                                .foregroundStyle(Color.miraclesSecondary)
+                                .listRowBackground(Color.miraclesBackground)
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         } else {
@@ -172,7 +172,7 @@ struct BestOfView: View {
                     Label("Delete", systemImage: "trash")
                 }
             }
-            .listRowBackground(Color.sunBackground)
+            .listRowBackground(Color.miraclesBackground)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
@@ -191,22 +191,22 @@ struct BestOfView: View {
             HStack(spacing: 0) {
                 // Amber left accent bar — matches travel map group header style
                 Rectangle()
-                    .fill(Color.sunAccent)
+                    .fill(Color.miraclesAccent)
                     .frame(width: 3)
 
                 HStack(spacing: 8) {
                     Text(String(year))
                         .font(.system(size: 14, weight: .bold, design: .serif))
                         .fontDesign(.serif)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
 
                     let count = entries.filter { $0.year == year }.count
                     Text("\(count)")
                         .font(.system(size: 10, weight: .bold, design: .serif))
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
-                        .background(Color.sunAccent.opacity(0.15))
+                        .background(Color.miraclesAccent.opacity(0.15))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
 
                     Spacer()
@@ -214,7 +214,7 @@ struct BestOfView: View {
                     if collapsible {
                         Image(systemName: expandedYears.contains(year) ? "chevron.up" : "chevron.down")
                             .font(.system(size: 11, weight: .semibold, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -241,11 +241,11 @@ struct BestOfView: View {
                         .tracking(0.8)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(selectedCategory == nil ? Color.sunAccent.opacity(0.12) : Color.clear)
-                        .foregroundStyle(selectedCategory == nil ? Color.sunAccent : Color.sunSecondary)
+                        .background(selectedCategory == nil ? Color.miraclesAccent.opacity(0.12) : Color.clear)
+                        .foregroundStyle(selectedCategory == nil ? Color.miraclesAccent : Color.miraclesSecondary)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(selectedCategory == nil ? Color.sunAccent.opacity(1) : Color.white.opacity(0.2), lineWidth: 1))
-                        .shadow(color: selectedCategory == nil ? Color.sunAccent.opacity(0.4) : .clear, radius: 6, y: 0)
+                        .overlay(Capsule().stroke(selectedCategory == nil ? Color.miraclesAccent.opacity(1) : Color.white.opacity(0.2), lineWidth: 1))
+                        .shadow(color: selectedCategory == nil ? Color.miraclesAccent.opacity(0.4) : .clear, radius: 6, y: 0)
                 }
                 ForEach(BestOfEntry.Category.allCases, id: \.self) { cat in
                     Button {
@@ -270,9 +270,9 @@ struct BestOfView: View {
                 Button { showAddEntry = true } label: {
                     Image(systemName: "plus")
                         .font(.system(.title2, design: .serif, weight: .semibold))
-                        .foregroundStyle(Color.sunBackground)
+                        .foregroundStyle(Color.miraclesBackground)
                         .frame(width: 56, height: 56)
-                        .background(Color.sunAccent)
+                        .background(Color.miraclesAccent)
                         .clipShape(Circle())
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                 }

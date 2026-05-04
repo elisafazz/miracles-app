@@ -30,7 +30,7 @@ private struct ShimmerEffect: ViewModifier {
 }
 
 extension View {
-    func sunShimmer() -> some View { modifier(ShimmerEffect()) }
+    func miraclesShimmer() -> some View { modifier(ShimmerEffect()) }
 }
 
 // MARK: - Skeleton entry card (matches BestOfEntryCard shape)
@@ -47,14 +47,14 @@ struct SkeletonEntryCard: View {
             block(width: 180, height: 12)
         }
         .padding(16)
-        .background(Color.sunSurface.opacity(0.45))
+        .background(Color.miraclesSurface.opacity(0.45))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .sunShimmer()
+        .miraclesShimmer()
     }
 
     private func block(width: CGFloat? = nil, height: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: 4)
-            .fill(Color.sunSurface)
+            .fill(Color.miraclesSurface)
             .frame(maxWidth: width == nil ? .infinity : nil)
             .frame(width: width, height: height)
     }

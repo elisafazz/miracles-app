@@ -24,7 +24,7 @@ struct WinePickerView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 Group {
                     switch step {
@@ -41,7 +41,7 @@ struct WinePickerView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
             .alert("Sommelier Error", isPresented: Binding(
@@ -85,13 +85,13 @@ struct WinePickerView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "wand.and.stars")
                         .font(.system(size: 48, design: .serif))
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                     Text("Wine Picker")
                         .font(.system(size: 28, weight: .bold, design: .serif))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                     Text("Snap a shelf or menu and we'll pick")
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
                 .padding(.top, 24)
 
@@ -149,8 +149,8 @@ struct WinePickerView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.sunAccent)
-                    .foregroundStyle(Color.sunBackground)
+                    .background(Color.miraclesAccent)
+                    .foregroundStyle(Color.miraclesBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
 
@@ -162,7 +162,7 @@ struct WinePickerView: View {
                 } label: {
                     Text("Choose a different photo")
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
             .padding(24)
@@ -176,11 +176,11 @@ struct WinePickerView: View {
             ProgressView()
                 .progressViewStyle(.circular)
                 .scaleEffect(1.6)
-                .tint(Color.sunAccent)
+                .tint(Color.miraclesAccent)
 
             Text("Asking our sommelier…")
                 .font(.system(.subheadline, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -193,7 +193,7 @@ struct WinePickerView: View {
                 // Result card — gold accent bar left edge, same as BestOfEntryCard
                 HStack(spacing: 0) {
                     Rectangle()
-                        .fill(Color.sunAccent)
+                        .fill(Color.miraclesAccent)
                         .frame(width: 3)
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -204,16 +204,16 @@ struct WinePickerView: View {
                                 .font(.system(size: 11, weight: .semibold, design: .serif))
                                 .tracking(1.2)
                         }
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
 
                         Text(resultText)
                             .font(.system(size: 15, design: .serif))
-                            .foregroundStyle(Color.sunText)
+                            .foregroundStyle(Color.miraclesText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(16)
                 }
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
 
                 // Action buttons
@@ -227,8 +227,8 @@ struct WinePickerView: View {
                         Text("Try Another")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.sunSurface)
-                            .foregroundStyle(Color.sunText)
+                            .background(Color.miraclesSurface)
+                            .foregroundStyle(Color.miraclesText)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
 
@@ -239,8 +239,8 @@ struct WinePickerView: View {
                             .fontWeight(.bold)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.sunAccent)
-                            .foregroundStyle(Color.sunBackground)
+                            .background(Color.miraclesAccent)
+                            .foregroundStyle(Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                 }
@@ -256,27 +256,27 @@ struct WinePickerView: View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(.title2, design: .serif))
-                .foregroundStyle(Color.sunAccent)
+                .foregroundStyle(Color.miraclesAccent)
                 .frame(width: 36)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 16, weight: .bold, design: .serif))
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 Text(subtitle)
                     .font(.system(.subheadline, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
         }
         .padding(.vertical, 16)
         .padding(.horizontal, 20)
-        .background(Color.sunSurface)
+        .background(Color.miraclesSurface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 

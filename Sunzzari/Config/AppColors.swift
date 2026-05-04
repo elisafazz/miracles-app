@@ -1,24 +1,17 @@
 import SwiftUI
 
-// TODO(miracles-phase-3): These hex values + the `sun*` color names are inherited
-// from Sunzzari's dark theme. Miracles theme direction is bright + loving (see
-// theme-design-notes.md). When Elisa picks a palette from palette-previews/:
-//   1. Replace hex values below with the chosen palette
-//   2. Rename `sun*` -> `miracles*` (Color.sunBackground -> Color.miraclesBackground)
-//      across all call sites (use Find/Replace in Xcode after build clean)
-//   3. Update UINavigationBarAppearance + UITabBarAppearance hardcoded #1F2937 in
-//      MiraclesApp.swift to match the new surface color
-//   4. Switch `.preferredColorScheme(.dark)` in MiraclesApp.swift to `.light`
-//      (do this together with the palette change, never alone — see CLAUDE.md
-//      "Visual Verification" rule)
-//   5. Update accent color in asset catalog (AccentColor.colorset)
-//   6. Replace app icon (AppIcon.appiconset) and launch screen
+// Direction 1 -- Warm Earth + Cream (locked 2026-05-04 by Elisa).
+// "Bright + loving + not religious." Italian-villa, family-album warmth.
+// See ~/Dropbox/claude/miracles/theme-design-notes.md for direction rationale
+// and palette-previews/direction-1-warm-earth.png for the reference mockup.
 extension Color {
-    static let sunBackground = Color(hex: "#030712")
-    static let sunAccent     = Color(hex: "#FBBF24")
-    static let sunSurface    = Color(hex: "#1F2937")
-    static let sunText       = Color(hex: "#FFFFFF")
-    static let sunSecondary  = Color.white.opacity(0.4)
+    static let miraclesBackground = Color(hex: "#FBF6E9") // warm cream -- page background
+    static let miraclesAccent     = Color(hex: "#D4815B") // terracotta -- primary accent
+    static let miraclesSurface    = Color(hex: "#FFFFFF") // white -- cards, nav bar, tab bar
+    static let miraclesText       = Color(hex: "#2A2421") // deep charcoal -- primary text
+    static let miraclesSecondary  = Color(hex: "#2A2421").opacity(0.5) // muted charcoal -- secondary text
+    static let miraclesSage       = Color(hex: "#8FA67E") // sage -- secondary accent
+    static let miraclesYellow     = Color(hex: "#F5C76A") // soft yellow -- tertiary highlights / ratings
 
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

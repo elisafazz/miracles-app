@@ -4,6 +4,17 @@ enum MiraclesPerson: String {
     case elisa  = "Elisa"
     case mom    = "Mom"
     case sister = "Sister"
+
+    /// User-facing nickname. rawValue stays stable so UserDefaults persistence
+    /// and Notion sender-name strings (e.g., existing BestOf entries) keep
+    /// decoding correctly across nickname changes.
+    var displayName: String {
+        switch self {
+        case .elisa:  return "DD"
+        case .mom:    return "Mom"
+        case .sister: return "Beat"
+        }
+    }
 }
 
 struct AppIdentity {

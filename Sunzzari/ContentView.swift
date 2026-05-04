@@ -39,14 +39,14 @@ struct ContentView: View {
                     }
                     .tag(4)
             }
-            .tint(.sunAccent)
+            .tint(.miraclesAccent)
             .fontDesign(.serif)
 
             // Warm ambient glow — two-point radial system
             GeometryReader { geo in
                 ZStack {
                     RadialGradient(
-                        colors: [Color(hex: "#FBBF24").opacity(0.10), .clear],
+                        colors: [Color(hex: "#D4815B").opacity(0.10), .clear],
                         center: .init(x: 0.0, y: 1.0),
                         startRadius: 0,
                         endRadius: geo.size.height * 0.55

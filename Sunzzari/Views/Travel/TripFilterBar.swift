@@ -23,22 +23,22 @@ struct TripFilterBar: View {
                 HStack(spacing: 4) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(.caption, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                     TextField("Search", text: $searchQuery)
                         .font(.system(.caption, design: .serif))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .frame(width: searchQuery.isEmpty ? 60 : 120)
                     if !searchQuery.isEmpty {
                         Button { searchQuery = "" } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(.caption2, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                         }
                     }
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(Capsule())
 
                 // Near Me
@@ -89,7 +89,7 @@ struct TripFilterBar: View {
                     } label: {
                         Text("Clear")
                             .font(.system(.caption2, design: .serif, weight: .medium))
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                     }
@@ -98,7 +98,7 @@ struct TripFilterBar: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
         }
-        .background(Color.sunBackground.opacity(0.9))
+        .background(Color.miraclesBackground.opacity(0.9))
     }
 
     private func chipButton(label: String, icon: String? = nil, isActive: Bool, action: @escaping () -> Void) -> some View {
@@ -111,10 +111,10 @@ struct TripFilterBar: View {
                 Text(label)
                     .font(.system(.caption2, design: .serif, weight: .medium))
             }
-            .foregroundStyle(isActive ? Color.sunBackground : Color.sunText)
+            .foregroundStyle(isActive ? Color.miraclesBackground : Color.miraclesText)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(isActive ? Color.sunAccent : Color.sunSurface)
+            .background(isActive ? Color.miraclesAccent : Color.miraclesSurface)
             .clipShape(Capsule())
         }
     }

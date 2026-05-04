@@ -18,19 +18,19 @@ struct MemoryCardView: View {
                     Spacer()
                     Text(memory.date.formatted(.dateTime.month(.abbreviated).day()) + " · " + String(memory.year))
                         .font(.system(size: 11, weight: .medium, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 Text(memory.title)
                     .font(.system(size: 16, weight: .bold, design: .serif))
                     .fontDesign(.serif)
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 if !memory.notes.isEmpty {
                     Text(memory.notes)
                         .font(.system(size: 13, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                         .lineLimit(3)
                 }
 
@@ -44,7 +44,7 @@ struct MemoryCardView: View {
             }
             .padding(16)
         }
-        .background(Color.sunSurface)
+        .background(Color.miraclesSurface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 12)

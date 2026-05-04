@@ -28,15 +28,15 @@ struct TripSidebarView: View {
             HStack {
                 Text("\(items.count) items")
                     .font(.system(.caption, design: .serif, weight: .medium))
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
                 Text("\(mappedCount) mapped")
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                 Spacer()
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.sunSurface)
+            .background(Color.miraclesSurface)
 
             // Item list
             ScrollViewReader { proxy in
@@ -56,7 +56,7 @@ struct TripSidebarView: View {
                                 Text("Other (\(untypedItems.count))")
                             }
                             .font(.system(.caption, design: .serif, weight: .semibold))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                             .padding(.horizontal, 12)
                             .padding(.top, 16)
                             .padding(.bottom, 4)
@@ -76,7 +76,7 @@ struct TripSidebarView: View {
                 }
             }
         }
-        .background(Color.sunBackground)
+        .background(Color.miraclesBackground)
     }
 
     private func sectionHeader(type: TripItem.ItemType, count: Int) -> some View {
@@ -86,7 +86,7 @@ struct TripSidebarView: View {
             Text("\(type.rawValue) (\(count))")
         }
         .font(.system(.caption, design: .serif, weight: .semibold))
-        .foregroundStyle(Color.sunSecondary)
+        .foregroundStyle(Color.miraclesSecondary)
         .padding(.horizontal, 12)
         .padding(.top, 16)
         .padding(.bottom, 4)
@@ -107,19 +107,19 @@ struct TripSidebarView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(.system(.subheadline, design: .serif, weight: .medium))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
                         if !item.legCity.isEmpty {
                             Text(item.legCity)
                                 .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                         }
                         if let date = item.displayDate {
                             Text(date)
                                 .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                         }
                     }
                 }
@@ -131,7 +131,7 @@ struct TripSidebarView: View {
                     let dist = loc.distance(from: CLLocation(latitude: lat, longitude: lon))
                     Text(formatDistance(dist))
                         .font(.system(.caption2, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 // Status badge
@@ -149,15 +149,15 @@ struct TripSidebarView: View {
                 if !item.hasCoordinates {
                     Image(systemName: "location.slash")
                         .font(.system(.caption2, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(item.id == selectedID ? Color.sunAccent.opacity(0.15) : Color.clear)
+            .background(item.id == selectedID ? Color.miraclesAccent.opacity(0.15) : Color.clear)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(item.id == selectedID ? Color.sunAccent : Color.clear, lineWidth: 1)
+                    .stroke(item.id == selectedID ? Color.miraclesAccent : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)

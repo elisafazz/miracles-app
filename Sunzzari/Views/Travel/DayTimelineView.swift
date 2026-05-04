@@ -41,14 +41,14 @@ struct DayTimelineView: View {
 
                                 if isToday {
                                     Circle()
-                                        .fill(Color.sunAccent)
+                                        .fill(Color.miraclesAccent)
                                         .frame(width: 4, height: 4)
                                 }
                             }
-                            .foregroundStyle(isSelected ? Color.sunBackground : Color.sunText)
+                            .foregroundStyle(isSelected ? Color.miraclesBackground : Color.miraclesText)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(isSelected ? Color.sunAccent : Color.sunSurface)
+                            .background(isSelected ? Color.miraclesAccent : Color.miraclesSurface)
                             .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)

@@ -94,11 +94,11 @@ struct TripDetailView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             if isLoading && items.isEmpty {
                 ProgressView()
-                    .tint(Color.sunAccent)
+                    .tint(Color.miraclesAccent)
             } else {
                 mainContent
             }
@@ -106,7 +106,7 @@ struct TripDetailView: View {
         .navigationTitle(trip.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarBackground(Color.sunSurface, for: .navigationBar)
+        .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 TripSortPicker(sortMode: $sortMode, nearMeActive: nearMeActive)
@@ -177,10 +177,10 @@ struct TripDetailView: View {
                     Text("Viewing cached data")
                 }
                 .font(.system(.caption, design: .serif))
-                .foregroundStyle(Color.sunBackground)
+                .foregroundStyle(Color.miraclesBackground)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
-                .background(Color.sunAccent)
+                .background(Color.miraclesAccent)
             }
 
             TripFilterBar(
@@ -233,9 +233,9 @@ struct TripDetailView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(.caption, design: .serif))
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
                 .frame(width: 36, height: 36)
-                .background(Color.sunSurface.opacity(0.9))
+                .background(Color.miraclesSurface.opacity(0.9))
                 .clipShape(Circle())
                 .shadow(color: .black.opacity(0.2), radius: 2)
         }

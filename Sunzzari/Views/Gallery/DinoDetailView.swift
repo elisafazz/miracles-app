@@ -12,7 +12,7 @@ struct PhotoDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 0) {
@@ -27,7 +27,7 @@ struct PhotoDetailView: View {
                             HStack {
                                 Text(photo.name)
                                     .font(.system(.title2, design: .serif, weight: .bold))
-                                    .foregroundStyle(Color.sunText)
+                                    .foregroundStyle(Color.miraclesText)
                                 Spacer()
                                 Button {
                                     onFavoriteToggle(photo)
@@ -35,7 +35,7 @@ struct PhotoDetailView: View {
                                 } label: {
                                     Image(systemName: photo.isFavorite ? "star.fill" : "star")
                                         .font(.system(.title2, design: .serif))
-                                        .foregroundStyle(Color.sunAccent)
+                                        .foregroundStyle(Color.miraclesAccent)
                                         .animation(.spring(duration: 0.3), value: photo.isFavorite)
                                 }
                             }
@@ -43,7 +43,7 @@ struct PhotoDetailView: View {
                             if let date = photo.dateAdded {
                                 Label(date.formatted(date: .long, time: .omitted), systemImage: "calendar")
                                     .font(.system(.subheadline, design: .serif))
-                                    .foregroundStyle(Color.sunSecondary)
+                                    .foregroundStyle(Color.miraclesSecondary)
                             }
 
                             if !photo.tags.isEmpty {
@@ -73,7 +73,7 @@ struct PhotoDetailView: View {
                         showEditPhoto = true
                     } label: {
                         Image(systemName: "pencil")
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -82,14 +82,14 @@ struct PhotoDetailView: View {
                             Task { await shareImage() }
                         } label: {
                             if isLoadingShare {
-                                ProgressView().tint(Color.sunAccent)
+                                ProgressView().tint(Color.miraclesAccent)
                             } else {
                                 Image(systemName: "square.and.arrow.up")
-                                    .foregroundStyle(Color.sunAccent)
+                                    .foregroundStyle(Color.miraclesAccent)
                             }
                         }
                         Button("Done") { dismiss() }
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                     }
                 }
             }

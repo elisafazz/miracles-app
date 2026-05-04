@@ -20,7 +20,7 @@ struct GalleryView: View {
         // Reached as a nested destination from HubView (which owns the NavigationStack).
         // Do NOT wrap in another NavigationStack — nested stacks cause double nav bars.
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SerifNavHeader("Gallery")
@@ -46,16 +46,16 @@ struct GalleryView: View {
                                 Text("Favorites")
                                     .font(.system(size: 13, weight: favoritesOnly ? .semibold : .regular, design: .serif))
                             }
-                            .foregroundStyle(favoritesOnly ? Color.sunAccent : Color.sunSecondary)
+                            .foregroundStyle(favoritesOnly ? Color.miraclesAccent : Color.miraclesSecondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
-                            .background(favoritesOnly ? Color.sunAccent.opacity(0.12) : Color.sunSurface)
+                            .background(favoritesOnly ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
                             .clipShape(Capsule())
                             .overlay(Capsule().stroke(
-                                favoritesOnly ? Color.sunAccent.opacity(0.8) : Color.white.opacity(0.15),
+                                favoritesOnly ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
                                 lineWidth: 1
                             ))
-                            .shadow(color: favoritesOnly ? Color.sunAccent.opacity(0.3) : .clear, radius: 6)
+                            .shadow(color: favoritesOnly ? Color.miraclesAccent.opacity(0.3) : .clear, radius: 6)
                         }
                         Spacer()
                     }
@@ -87,9 +87,9 @@ struct GalleryView: View {
                     } label: {
                         Image(systemName: "photo.stack.fill")
                             .font(.system(.title3, design: .serif, weight: .semibold))
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                             .frame(width: 48, height: 48)
-                            .background(Color.sunSurface)
+                            .background(Color.miraclesSurface)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
                     }
@@ -103,9 +103,9 @@ struct GalleryView: View {
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(.title2, design: .serif, weight: .semibold))
-                            .foregroundStyle(Color.sunBackground)
+                            .foregroundStyle(Color.miraclesBackground)
                             .frame(width: 56, height: 56)
-                            .background(Color.sunAccent)
+                            .background(Color.miraclesAccent)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                     }
@@ -199,7 +199,7 @@ private struct GalleryCell: View {
             } label: {
                 Image(systemName: photo.isFavorite ? "star.fill" : "star")
                     .font(.system(.caption, design: .serif, weight: .bold))
-                    .foregroundStyle(photo.isFavorite ? Color.sunAccent : Color.white.opacity(0.8))
+                    .foregroundStyle(photo.isFavorite ? Color.miraclesAccent : Color.white.opacity(0.8))
                     .padding(6)
                     .background(.ultraThinMaterial, in: Circle())
                     .padding(6)

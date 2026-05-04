@@ -10,7 +10,7 @@ struct OnThisDayView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     SerifNavHeader("On This Day", showsBack: false)
@@ -53,7 +53,7 @@ struct OnThisDayView: View {
                                             Label("Delete", systemImage: "trash")
                                         }
                                     }
-                                    .listRowBackground(Color.sunBackground)
+                                    .listRowBackground(Color.miraclesBackground)
                                     .listRowSeparator(.hidden)
                                     .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 8, trailing: 16))
                             }
@@ -94,19 +94,19 @@ struct OnThisDayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(Date().formatted(.dateTime.weekday(.wide)))
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
                 Text(Date().formatted(.dateTime.month(.wide).day()))
                     .font(.system(.title3, design: .serif, weight: .bold))
-                    .foregroundStyle(Color.sunAccent)
+                    .foregroundStyle(Color.miraclesAccent)
             }
             Spacer()
             Text("\(todaysMemories.count) \(todaysMemories.count == 1 ? "MEMORY" : "MEMORIES")")
                 .font(.system(size: 10, weight: .bold, design: .serif))
                 .tracking(0.8)
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
                 .padding(.horizontal, 9)
                 .padding(.vertical, 4)
-                .background(Color.sunSurface)
+                .background(Color.miraclesSurface)
                 .clipShape(Capsule())
                 .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 1))
         }
@@ -121,9 +121,9 @@ struct OnThisDayView: View {
                 Button { showAddMemory = true } label: {
                     Image(systemName: "plus")
                         .font(.system(.title2, design: .serif, weight: .semibold))
-                        .foregroundStyle(Color.sunBackground)
+                        .foregroundStyle(Color.miraclesBackground)
                         .frame(width: 56, height: 56)
-                        .background(Color.sunAccent)
+                        .background(Color.miraclesAccent)
                         .clipShape(Circle())
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                 }

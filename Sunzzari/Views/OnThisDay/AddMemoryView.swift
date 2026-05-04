@@ -15,7 +15,7 @@ struct AddMemoryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -23,18 +23,18 @@ struct AddMemoryView: View {
                         field(label: "Title", icon: "textformat") {
                             TextField("e.g. First trip to Paris", text: $title)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         // Date
                         field(label: "Date", icon: "calendar") {
                             DatePicker("", selection: $date, in: ...Date(), displayedComponents: .date)
                                 .datePickerStyle(.graphical)
-                                .tint(.sunAccent)
+                                .tint(.miraclesAccent)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
 
@@ -53,12 +53,12 @@ struct AddMemoryView: View {
                                             .background(
                                                 category == cat
                                                     ? Color(hex: cat.colorHex).opacity(0.3)
-                                                    : Color.sunSurface
+                                                    : Color.miraclesSurface
                                             )
                                             .foregroundStyle(
                                                 category == cat
                                                     ? Color(hex: cat.colorHex)
-                                                    : Color.sunSecondary
+                                                    : Color.miraclesSecondary
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
                                             .overlay(
@@ -80,9 +80,9 @@ struct AddMemoryView: View {
                             TextField("What made this moment special?", text: $notes, axis: .vertical)
                                 .lineLimit(3...6)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         // Optional photo
@@ -90,7 +90,7 @@ struct AddMemoryView: View {
                             PhotosPicker(selection: $selectedItem, matching: .images) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.sunSurface)
+                                        .fill(Color.miraclesSurface)
                                         .frame(height: 140)
                                     if let image = selectedImage {
                                         Image(uiImage: image)
@@ -103,10 +103,10 @@ struct AddMemoryView: View {
                                         VStack(spacing: 8) {
                                             Image(systemName: "photo.badge.plus")
                                                 .font(.system(.title, design: .serif))
-                                                .foregroundStyle(Color.sunAccent)
+                                                .foregroundStyle(Color.miraclesAccent)
                                             Text("Add a photo")
                                                 .font(.system(.caption, design: .serif))
-                                                .foregroundStyle(Color.sunSecondary)
+                                                .foregroundStyle(Color.miraclesSecondary)
                                         }
                                     }
                                 }
@@ -131,14 +131,14 @@ struct AddMemoryView: View {
                             Task { await save() }
                         } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Memory")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(title.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(title.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(title.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(title.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(title.isEmpty || isSaving)
@@ -150,7 +150,7 @@ struct AddMemoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -160,7 +160,7 @@ struct AddMemoryView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(label, systemImage: icon)
                 .font(.system(.caption, design: .serif, weight: .semibold))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
             content()
         }
     }

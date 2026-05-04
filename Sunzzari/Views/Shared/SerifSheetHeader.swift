@@ -29,11 +29,11 @@ struct SerifSheetHeader<Leading: View, Trailing: View>: View {
             HStack {
                 leading
                     .font(.system(size: 17, weight: .regular, design: .serif))
-                    .foregroundStyle(Color.sunAccent)
+                    .foregroundStyle(Color.miraclesAccent)
                 Spacer()
                 trailing
                     .font(.system(size: 17, weight: .semibold, design: .serif))
-                    .foregroundStyle(Color.sunAccent)
+                    .foregroundStyle(Color.miraclesAccent)
             }
             .padding(.horizontal, 16)
 

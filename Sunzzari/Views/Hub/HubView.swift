@@ -4,7 +4,7 @@ struct HubView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     PageHeader("Hub")

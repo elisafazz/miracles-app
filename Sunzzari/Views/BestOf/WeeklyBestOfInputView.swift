@@ -35,7 +35,7 @@ struct WeeklyBestOfInputView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 22) {
@@ -55,10 +55,10 @@ struct WeeklyBestOfInputView: View {
                         } label: {
                             Text("More categories")
                                 .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunAccent)
+                                .foregroundStyle(Color.miraclesAccent)
                         }
                         .padding(.horizontal, 4)
-                        .tint(Color.sunAccent)
+                        .tint(Color.miraclesAccent)
 
                         if let errorMessage {
                             Text(errorMessage)
@@ -70,7 +70,7 @@ struct WeeklyBestOfInputView: View {
                         if let savedMessage {
                             Text(savedMessage)
                                 .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Color.sunAccent)
+                                .foregroundStyle(Color.miraclesAccent)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
 
@@ -84,7 +84,7 @@ struct WeeklyBestOfInputView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }
@@ -95,10 +95,10 @@ struct WeeklyBestOfInputView: View {
             Text("Log this week's highlights")
                 .font(.system(.title3, design: .serif, weight: .bold))
                 .fontDesign(.serif)
-                .foregroundStyle(Color.sunText)
+                .foregroundStyle(Color.miraclesText)
             Text("Jot anything memorable. Add a date if you want; otherwise today is fine.")
                 .font(.system(.caption, design: .serif))
-                .foregroundStyle(Color.sunSecondary)
+                .foregroundStyle(Color.miraclesSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -117,7 +117,7 @@ struct WeeklyBestOfInputView: View {
                 Text(cat.rawValue)
                     .font(.system(.headline, design: .serif))
                     .fontDesign(.serif)
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
             }
 
             ForEach(list) { draft in
@@ -156,9 +156,9 @@ struct WeeklyBestOfInputView: View {
                 TextField("e.g. \(placeholder(for: cat))", text: binding.text, axis: .vertical)
                     .lineLimit(1...3)
                     .padding(12)
-                    .background(Color.sunSurface)
+                    .background(Color.miraclesSurface)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .foregroundStyle(Color.sunText)
+                    .foregroundStyle(Color.miraclesText)
 
                 if (drafts[cat]?.count ?? 0) > 1 {
                     Button {
@@ -166,7 +166,7 @@ struct WeeklyBestOfInputView: View {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     } label: {
                         Image(systemName: "minus.circle.fill")
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
                 }
             }
@@ -177,7 +177,7 @@ struct WeeklyBestOfInputView: View {
                          ? binding.wrappedValue.date.formatted(.dateTime.month(.abbreviated).day().year())
                          : "Use today")
                         .font(.system(.caption, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
                 .tint(accent)
             }
@@ -191,7 +191,7 @@ struct WeeklyBestOfInputView: View {
             }
         }
         .padding(10)
-        .background(Color.sunSurface.opacity(0.5))
+        .background(Color.miraclesSurface.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
@@ -200,14 +200,14 @@ struct WeeklyBestOfInputView: View {
             Task { await saveAll() }
         } label: {
             HStack(spacing: 10) {
-                if isSaving { ProgressView().tint(.sunBackground) }
+                if isSaving { ProgressView().tint(.miraclesBackground) }
                 Text(isSaving ? "Saving..." : "Save All (\(totalFilled))")
                     .font(.system(.headline, design: .serif))
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(totalFilled == 0 ? Color.sunSurface : Color.sunAccent)
-            .foregroundStyle(totalFilled == 0 ? Color.sunSecondary : Color.sunBackground)
+            .background(totalFilled == 0 ? Color.miraclesSurface : Color.miraclesAccent)
+            .foregroundStyle(totalFilled == 0 ? Color.miraclesSecondary : Color.miraclesBackground)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .disabled(totalFilled == 0 || isSaving)

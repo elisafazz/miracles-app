@@ -21,7 +21,7 @@ struct TripListView: View {
 
     var body: some View {
         ZStack {
-            Color.sunBackground.ignoresSafeArea()
+            Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 SerifNavHeader("Travel") {
@@ -29,7 +29,7 @@ struct TripListView: View {
                         Toggle("Show completed", isOn: $showCompleted)
                     } label: {
                         Image(systemName: "slider.horizontal.3")
-                            .foregroundStyle(Color.sunAccent)
+                            .foregroundStyle(Color.miraclesAccent)
                     }
                 }
 
@@ -37,7 +37,7 @@ struct TripListView: View {
                     VStack(spacing: 16) {
                         ForEach(0..<3, id: \.self) { _ in
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.sunSurface)
+                                .fill(Color.miraclesSurface)
                                 .frame(height: 200)
                         }
                     }
@@ -77,10 +77,10 @@ struct TripListView: View {
             Text("Viewing cached data")
         }
         .font(.system(.caption, design: .serif))
-        .foregroundStyle(Color.sunBackground)
+        .foregroundStyle(Color.miraclesBackground)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(Color.sunAccent)
+        .background(Color.miraclesAccent)
         .clipShape(Capsule())
         .padding(.top, 4)
     }

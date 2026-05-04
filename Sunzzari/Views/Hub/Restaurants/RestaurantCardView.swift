@@ -8,7 +8,7 @@ struct RestaurantCardView: View {
             // Left accent bar + content
             HStack(spacing: 0) {
                 Rectangle()
-                    .fill(restaurant.preference.map { Color(hex: $0.colorHex) } ?? Color.sunSecondary)
+                    .fill(restaurant.preference.map { Color(hex: $0.colorHex) } ?? Color.miraclesSecondary)
                     .frame(width: 3)
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -16,7 +16,7 @@ struct RestaurantCardView: View {
                         Text(restaurant.name)
                             .font(.system(size: 15, weight: .bold, design: .serif))
                             .fontDesign(.serif)
-                            .foregroundStyle(Color.sunText)
+                            .foregroundStyle(Color.miraclesText)
                             .lineLimit(2)
 
                         Spacer()
@@ -39,7 +39,7 @@ struct RestaurantCardView: View {
                     if !loc.isEmpty {
                         Text(loc)
                             .font(.system(.subheadline, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
 
                     // Good For chips (max 3 + overflow)
@@ -52,16 +52,16 @@ struct RestaurantCardView: View {
                                     Text(tag.uppercased())
                                         .font(.system(size: 9, weight: .bold, design: .serif))
                                         .tracking(0.5)
-                                        .foregroundStyle(Color.sunSecondary)
+                                        .foregroundStyle(Color.miraclesSecondary)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 3)
-                                        .background(Color.sunSurface)
+                                        .background(Color.miraclesSurface)
                                         .clipShape(RoundedRectangle(cornerRadius: 4))
                                 }
                                 if overflow > 0 {
                                     Text("+\(overflow) more")
                                         .font(.system(size: 9, weight: .bold, design: .serif))
-                                        .foregroundStyle(Color.sunSecondary)
+                                        .foregroundStyle(Color.miraclesSecondary)
                                 }
                             }
                         }
@@ -72,6 +72,6 @@ struct RestaurantCardView: View {
                 .padding(.horizontal, 12)
             }
         }
-        .background(Color.sunBackground)
+        .background(Color.miraclesBackground)
     }
 }

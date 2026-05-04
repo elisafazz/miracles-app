@@ -48,7 +48,7 @@ struct TripBottomSheetView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: isExpanded ? maxHeight : collapsedHeight, alignment: .top)
-            .background(Color.sunSurface)
+            .background(Color.miraclesSurface)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .shadow(color: .black.opacity(0.3), radius: 8, y: -2)
             .offset(y: sheetOffset)
@@ -97,22 +97,22 @@ struct TripBottomSheetView: View {
                     }
                     Text(item.name)
                         .font(.system(.subheadline, design: .serif, weight: .medium))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .lineLimit(1)
                 } else {
                     Text("\(items.count) items")
                         .font(.system(.subheadline, design: .serif, weight: .medium))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                     Text("\(mappedCount) mapped")
                         .font(.system(.caption, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.up")
                     .font(.system(.caption, design: .serif))
-                    .foregroundStyle(Color.sunSecondary)
+                    .foregroundStyle(Color.miraclesSecondary)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
@@ -135,13 +135,13 @@ struct TripBottomSheetView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(item.name)
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .lineLimit(1)
 
                     if !item.legCity.isEmpty {
                         Text(item.legCity)
                             .font(.system(.caption, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
                 }
 
@@ -151,7 +151,7 @@ struct TripBottomSheetView: View {
                     let dist = loc.distance(from: CLLocation(latitude: lat, longitude: lon))
                     Text(formatDistance(dist))
                         .font(.system(.caption2, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 if let status = item.status {
@@ -162,7 +162,7 @@ struct TripBottomSheetView: View {
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 16)
-            .background(item.id == selectedID ? Color.sunAccent.opacity(0.15) : Color.clear)
+            .background(item.id == selectedID ? Color.miraclesAccent.opacity(0.15) : Color.clear)
         }
         .buttonStyle(.plain)
     }

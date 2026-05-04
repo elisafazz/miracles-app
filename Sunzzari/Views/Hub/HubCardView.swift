@@ -71,13 +71,13 @@ struct HubCardView: View {
     private var symbolTile: some View {
         ZStack {
             LinearGradient(
-                colors: [Color.sunSurface, Color(hex: "#374151")],
+                colors: [Color.miraclesSurface, Color(hex: "#374151")],
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
             if let symbolName {
                 Image(systemName: symbolName)
                     .font(.system(size: 64, weight: .light, design: .serif))
-                    .foregroundStyle(Color.sunAccent.opacity(0.85))
+                    .foregroundStyle(Color.miraclesAccent.opacity(0.85))
             }
         }
     }

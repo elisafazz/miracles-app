@@ -15,7 +15,7 @@ struct AddPhotoView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -23,7 +23,7 @@ struct AddPhotoView: View {
                         PhotosPicker(selection: $selectedItem, matching: .images) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.sunSurface)
+                                    .fill(Color.miraclesSurface)
                                     .frame(height: 220)
 
                                 if let image = selectedImage {
@@ -37,10 +37,10 @@ struct AddPhotoView: View {
                                     VStack(spacing: 12) {
                                         Image(systemName: "camera.fill")
                                             .font(.system(size: 40, design: .serif))
-                                            .foregroundStyle(Color.sunAccent)
+                                            .foregroundStyle(Color.miraclesAccent)
                                         Text("Tap to choose a photo")
                                             .font(.system(.subheadline, design: .serif))
-                                            .foregroundStyle(Color.sunSecondary)
+                                            .foregroundStyle(Color.miraclesSecondary)
                                     }
                                 }
                             }
@@ -58,19 +58,19 @@ struct AddPhotoView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Name", systemImage: "textformat")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                             TextField("e.g. Mom's garden", text: $name)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         // Tags
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Tags", systemImage: "tag")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                                 ForEach(FamilyPhoto.Tag.allCases, id: \.self) { tag in
                                     Button {
@@ -88,12 +88,12 @@ struct AddPhotoView: View {
                                             .background(
                                                 selectedTags.contains(tag)
                                                     ? Color(hex: tag.color).opacity(0.3)
-                                                    : Color.sunSurface
+                                                    : Color.miraclesSurface
                                             )
                                             .foregroundStyle(
                                                 selectedTags.contains(tag)
                                                     ? Color(hex: tag.color)
-                                                    : Color.sunSecondary
+                                                    : Color.miraclesSecondary
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
                                             .overlay(
@@ -123,15 +123,15 @@ struct AddPhotoView: View {
                         } label: {
                             HStack(spacing: 10) {
                                 if isUploading {
-                                    ProgressView().tint(.sunBackground)
+                                    ProgressView().tint(.miraclesBackground)
                                 }
                                 Text(isUploading ? "Uploading..." : "Save Photo")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(canSave ? Color.sunAccent : Color.sunSurface)
-                            .foregroundStyle(canSave ? Color.sunBackground : Color.sunSecondary)
+                            .background(canSave ? Color.miraclesAccent : Color.miraclesSurface)
+                            .foregroundStyle(canSave ? Color.miraclesBackground : Color.miraclesSecondary)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(!canSave || isUploading)
@@ -144,7 +144,7 @@ struct AddPhotoView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }

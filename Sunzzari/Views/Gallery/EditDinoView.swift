@@ -22,7 +22,7 @@ struct EditPhotoView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.sunBackground.ignoresSafeArea()
+                Color.miraclesBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -30,18 +30,18 @@ struct EditPhotoView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("Name", systemImage: "textformat")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                             TextField("e.g. Mom's garden", text: $name)
                                 .padding()
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
 
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Tags", systemImage: "tag")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                                 ForEach(FamilyPhoto.Tag.allCases, id: \.self) { tag in
                                     Button {
@@ -56,12 +56,12 @@ struct EditPhotoView: View {
                                             .background(
                                                 selectedTags.contains(tag)
                                                     ? Color(hex: tag.color).opacity(0.3)
-                                                    : Color.sunSurface
+                                                    : Color.miraclesSurface
                                             )
                                             .foregroundStyle(
                                                 selectedTags.contains(tag)
                                                     ? Color(hex: tag.color)
-                                                    : Color.sunSecondary
+                                                    : Color.miraclesSecondary
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 10))
                                             .overlay(
@@ -86,14 +86,14 @@ struct EditPhotoView: View {
                             Task { await save() }
                         } label: {
                             HStack(spacing: 10) {
-                                if isSaving { ProgressView().tint(.sunBackground) }
+                                if isSaving { ProgressView().tint(.miraclesBackground) }
                                 Text(isSaving ? "Saving..." : "Save Changes")
                                     .font(.system(.headline, design: .serif))
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(name.isEmpty ? Color.sunSurface : Color.sunAccent)
-                            .foregroundStyle(name.isEmpty ? Color.sunSecondary : Color.sunBackground)
+                            .background(name.isEmpty ? Color.miraclesSurface : Color.miraclesAccent)
+                            .foregroundStyle(name.isEmpty ? Color.miraclesSecondary : Color.miraclesBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                         .disabled(name.isEmpty || isSaving)
@@ -105,7 +105,7 @@ struct EditPhotoView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.sunSecondary)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)
                 }
             }
         }

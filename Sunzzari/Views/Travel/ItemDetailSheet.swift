@@ -24,7 +24,7 @@ struct ItemDetailSheet: View {
                         Text(item.name)
                             .font(.system(.title3, design: .serif, weight: .bold))
                             .fontDesign(.serif)
-                            .foregroundStyle(Color.sunText)
+                            .foregroundStyle(Color.miraclesText)
 
                         Spacer()
 
@@ -37,9 +37,9 @@ struct ItemDetailSheet: View {
                             } label: {
                                 Image(systemName: "doc.on.doc")
                                     .font(.system(.caption, design: .serif))
-                                    .foregroundStyle(Color.sunSecondary)
+                                    .foregroundStyle(Color.miraclesSecondary)
                                     .padding(8)
-                                    .background(Color.sunSurface)
+                                    .background(Color.miraclesSurface)
                                     .clipShape(Circle())
                             }
                         }
@@ -56,13 +56,13 @@ struct ItemDetailSheet: View {
                         if !item.legCity.isEmpty {
                             Label(item.legCity, systemImage: "mappin")
                                 .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                         }
 
                         if let dist = distanceToItem {
                             Label(dist, systemImage: "location")
                                 .font(.system(.caption, design: .serif))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                         }
                     }
 
@@ -83,7 +83,7 @@ struct ItemDetailSheet: View {
                     if let date = item.displayDate {
                         Label(date, systemImage: "calendar")
                             .font(.system(.subheadline, design: .serif))
-                            .foregroundStyle(Color.sunSecondary)
+                            .foregroundStyle(Color.miraclesSecondary)
                     }
 
                     // Notes
@@ -91,10 +91,10 @@ struct ItemDetailSheet: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Notes")
                                 .font(.system(.caption, design: .serif, weight: .semibold))
-                                .foregroundStyle(Color.sunSecondary)
+                                .foregroundStyle(Color.miraclesSecondary)
                             Text(item.notes)
                                 .font(.system(.subheadline, design: .serif))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                         }
                     }
 
@@ -108,10 +108,10 @@ struct ItemDetailSheet: View {
                             } label: {
                                 Label("Open in Maps", systemImage: "map.fill")
                                     .font(.system(.subheadline, design: .serif, weight: .medium))
-                                    .foregroundStyle(Color.sunBackground)
+                                    .foregroundStyle(Color.miraclesBackground)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
-                                    .background(Color.sunAccent)
+                                    .background(Color.miraclesAccent)
                                     .clipShape(RoundedRectangle(cornerRadius: 10))
                             }
                         }
@@ -121,25 +121,25 @@ struct ItemDetailSheet: View {
                         } label: {
                             Label("Notion", systemImage: "link")
                                 .font(.system(.subheadline, design: .serif, weight: .medium))
-                                .foregroundStyle(Color.sunText)
+                                .foregroundStyle(Color.miraclesText)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
-                                .background(Color.sunSurface)
+                                .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                     }
                 }
                 .padding()
             }
-            .background(Color.sunBackground)
+            .background(Color.miraclesBackground)
             .navigationTitle(item.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(Color.sunSurface, for: .navigationBar)
+            .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { dismiss() }
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                 }
             }
         }

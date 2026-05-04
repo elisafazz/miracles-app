@@ -12,7 +12,7 @@ struct ActivityCardView: View {
     var body: some View {
         HStack(spacing: 0) {
             Rectangle()
-                .fill(activity.active ? Color.sunAccent : Color.sunSecondary.opacity(0.4))
+                .fill(activity.active ? Color.miraclesAccent : Color.miraclesSecondary.opacity(0.4))
                 .frame(width: 3)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -20,7 +20,7 @@ struct ActivityCardView: View {
                     Text(activity.name)
                         .font(.system(size: 15, weight: .bold, design: .serif))
                         .fontDesign(.serif)
-                        .foregroundStyle(Color.sunText)
+                        .foregroundStyle(Color.miraclesText)
                         .lineLimit(2)
                     Spacer()
                 }
@@ -28,13 +28,13 @@ struct ActivityCardView: View {
                 if !activity.location.isEmpty {
                     Text(activity.location)
                         .font(.system(.subheadline, design: .serif))
-                        .foregroundStyle(Color.sunSecondary)
+                        .foregroundStyle(Color.miraclesSecondary)
                 }
 
                 if activity.dateSpecific, let date = activity.dateActive {
                     Text(dateFormatter.string(from: date))
                         .font(.system(.caption, design: .serif))
-                        .foregroundStyle(Color.sunAccent)
+                        .foregroundStyle(Color.miraclesAccent)
                 }
 
                 // Status badges
@@ -63,6 +63,6 @@ struct ActivityCardView: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
         }
-        .background(Color.sunBackground)
+        .background(Color.miraclesBackground)
     }
 }

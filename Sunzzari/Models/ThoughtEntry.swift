@@ -13,14 +13,7 @@ struct ThoughtEntry: Identifiable {
     /// string for any legacy entries that don't decode cleanly.
     var authorDisplay: String { person?.displayName ?? author }
 
-    var authorEmoji: String {
-        switch person {
-        case .elisa:  return "🌸"
-        case .mom:    return "🌷"
-        case .sister: return "🌼"
-        case .none:   return "💬"
-        }
-    }
+    var authorEmoji: String { person?.defaultEmoji ?? "💬" }
 
     var authorColorHex: String {
         switch person {

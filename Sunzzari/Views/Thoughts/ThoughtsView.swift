@@ -59,7 +59,7 @@ struct ThoughtsView: View {
 
                 // Input area
                 HStack(spacing: 10) {
-                    Text(myPerson == .elisa ? "🌸" : myPerson == .mom ? "🌷" : "🌼")
+                    Text(myPerson.defaultEmoji)
                         .font(.system(size: 18, design: .serif))
 
                     TextField("write something...", text: $newText, axis: .vertical)

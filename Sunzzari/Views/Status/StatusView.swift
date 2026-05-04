@@ -76,7 +76,7 @@ struct StatusView: View {
     private var myCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                Text(myPerson.displayName == "Mom" ? "🌷" : myPerson == .elisa ? "🌸" : "🌼")
+                Text(myPerson.defaultEmoji)
                     .font(.system(size: 28))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(myPerson.displayName)

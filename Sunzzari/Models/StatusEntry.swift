@@ -20,14 +20,7 @@ struct StatusEntry: Identifiable {
 
     var displayName: String { person?.displayName ?? name }
 
-    var personEmoji: String {
-        switch person {
-        case .elisa:  return "🌸"
-        case .mom:    return "🌷"
-        case .sister: return "🌼"
-        case .none:   return "💛"
-        }
-    }
+    var personEmoji: String { person?.defaultEmoji ?? "💛" }
 
     /// Per-person accent (matches ThoughtEntry).
     var accentColorHex: String {

@@ -27,19 +27,19 @@ struct SettingsView: View {
                 VStack(spacing: 16) {
                     identityCard(
                         person: .elisa,
-                        emoji: "🌸",
+                        emoji: MiraclesPerson.elisa.defaultEmoji,
                         name: MiraclesPerson.elisa.displayName,
                         subtitle: ""
                     )
                     identityCard(
                         person: .mom,
-                        emoji: "🌷",
+                        emoji: MiraclesPerson.mom.defaultEmoji,
                         name: MiraclesPerson.mom.displayName,
                         subtitle: ""
                     )
                     identityCard(
                         person: .sister,
-                        emoji: "🌼",
+                        emoji: MiraclesPerson.sister.defaultEmoji,
                         name: MiraclesPerson.sister.displayName,
                         subtitle: ""
                     )

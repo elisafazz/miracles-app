@@ -15,6 +15,17 @@ enum MiraclesPerson: String {
         case .sister: return "Beat"
         }
     }
+
+    /// Per-person emoji used in identity cards, Thoughts/Status author chips,
+    /// and notification dialogs. Centralized here so a future emoji swap is a
+    /// one-line edit instead of a grep across views and models.
+    var defaultEmoji: String {
+        switch self {
+        case .elisa:  return "👩‍🍳"
+        case .mom:    return "👩‍👧‍👧"
+        case .sister: return "🎵"
+        }
+    }
 }
 
 struct AppIdentity {

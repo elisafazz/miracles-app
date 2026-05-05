@@ -38,15 +38,18 @@ struct TodayView: View {
 
                 VStack(spacing: 0) {
                     PageHeader(headerDateString) {
-                        Button {
-                            showCustomBoop = true
-                        } label: {
-                            Image(systemName: "square.and.pencil")
-                                .font(.system(size: 16, weight: .semibold, design: .serif))
-                                .foregroundStyle(Color.miraclesAccent)
-                                .padding(8)
-                                .background(Color.miraclesChipFill)
-                                .clipShape(Circle())
+                        HStack(spacing: 8) {
+                            InboxBellButton()
+                            Button {
+                                showCustomBoop = true
+                            } label: {
+                                Image(systemName: "square.and.pencil")
+                                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                                    .foregroundStyle(Color.miraclesAccent)
+                                    .padding(8)
+                                    .background(Color.miraclesChipFill)
+                                    .clipShape(Circle())
+                            }
                         }
                     }
 

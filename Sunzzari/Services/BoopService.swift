@@ -78,18 +78,26 @@ final class BoopService: @unchecked Sendable {
             // Skip boops sent from this device
             if (event.tags ?? []).contains(deviceTag) { continue }
 
-            let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
+            let currentBadge = await UIApplication.shared.applicationIconBadgeNumber
             let content = UNMutableNotificationContent()
             content.title = "Boop! 💛"
             content.body = event.message
             content.sound = .default
-            content.badge = NSNumber(value: delivered.count + 1)
+            content.badge = NSNumber(value: currentBadge + 1)
+            let inboxID = "miracles-boop-\(event.id)"
             let req = UNNotificationRequest(
-                identifier: "miracles-boop-\(event.id)",
+                identifier: inboxID,
                 content: content,
                 trigger: nil // deliver immediately
             )
             try? await UNUserNotificationCenter.current().add(req)
+
+            NotificationInboxService.shared.append(
+                id: inboxID,
+                type: .boop,
+                title: "Boop! 💛",
+                subtitle: event.message
+            )
         }
     }
 }

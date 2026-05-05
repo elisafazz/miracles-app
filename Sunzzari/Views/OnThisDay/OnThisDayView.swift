@@ -108,7 +108,7 @@ struct OnThisDayView: View {
                 .padding(.vertical, 4)
                 .background(Color.miraclesSurface)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 1))
+                .overlay(Capsule().stroke(Color.miraclesDivider, lineWidth: 1))
         }
         .padding(.vertical, 8)
     }

@@ -49,7 +49,7 @@ struct SettingsView: View {
                 Spacer()
 
                 // Footer note
-                Text("You can change this anytime in the Settings tab.")
+                Text("You can change this anytime under More > Settings.")
                     .font(.system(size: 12, design: .serif))
                     .foregroundStyle(Color.miraclesSecondary.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -75,7 +75,7 @@ struct SettingsView: View {
                 Text(emoji)
                     .font(.system(size: 40, design: .serif))
                     .frame(width: 56, height: 56)
-                    .background(Color.white.opacity(0.07))
+                    .background(Color.miraclesChipFill)
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -101,7 +101,7 @@ struct SettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.miraclesAccent : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                    .stroke(isSelected ? Color.miraclesAccent : Color.miraclesChipStroke, lineWidth: isSelected ? 2 : 1)
             )
             .shadow(color: isSelected ? Color.miraclesAccent.opacity(0.25) : .clear, radius: 8)
         }

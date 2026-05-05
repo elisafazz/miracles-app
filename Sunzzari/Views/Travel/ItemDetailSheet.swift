@@ -98,7 +98,7 @@ struct ItemDetailSheet: View {
                         }
                     }
 
-                    Divider().overlay(Color.white.opacity(0.1))
+                    Divider().overlay(Color.miraclesDivider)
 
                     // Actions
                     HStack(spacing: 12) {

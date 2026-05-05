@@ -4,8 +4,25 @@ import UserNotifications
 final class NotificationService: @unchecked Sendable {
     static let shared = NotificationService()
 
+    /// Returns true when the user has granted (or has yet to be asked for)
+    /// notification permission. Records the latest known status so views can
+    /// decide whether to show a "re-enable in Settings" CTA without each one
+    /// hitting the UN center directly.
+    @MainActor
+    func currentAuthorizationStatus() async -> UNAuthorizationStatus {
+        await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
     func requestPermission() async {
-        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+        let center = UNUserNotificationCenter.current()
+        let current = await center.notificationSettings().authorizationStatus
+        // If the user previously denied, requesting again silently no-ops at
+        // the OS level. The caller (Settings/More) is expected to surface a
+        // "Open iOS Settings" CTA instead. Keep this method idempotent so it
+        // can still be called from cold-launch wiring without re-prompting.
+        if current == .notDetermined {
+            _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+        }
     }
 
     /// Schedules a repeating Sunday 8pm local-time notification prompting

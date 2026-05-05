@@ -84,7 +84,7 @@ struct TripBottomSheetView: View {
         VStack(spacing: 6) {
             // Drag handle
             Capsule()
-                .fill(Color.white.opacity(0.3))
+                .fill(Color.miraclesChipStroke)
                 .frame(width: 36, height: 4)
                 .padding(.top, 8)
 

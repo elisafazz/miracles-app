@@ -6,6 +6,7 @@ struct ThoughtsView: View {
     @State private var isLoading = true
     @State private var newText = ""
     @State private var isSending = false
+    @State private var errorMessage: String?
     @FocusState private var inputFocused: Bool
 
     /// Author identity used for new entries. Falls back to .elisa for safety
@@ -53,6 +54,24 @@ struct ThoughtsView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .refreshable { await reload() }
+                }
+
+                if let errorMessage {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 12, design: .serif))
+                            .foregroundStyle(Color.miraclesAccent)
+                        Text(errorMessage)
+                            .font(.system(size: 12, design: .serif))
+                            .foregroundStyle(Color.miraclesText)
+                        Spacer()
+                        Button("Retry") { Task { await reload() } }
+                            .font(.system(size: 12, weight: .semibold, design: .serif))
+                            .foregroundStyle(Color.miraclesAccent)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.miraclesAccent.opacity(0.08))
                 }
 
                 Divider().background(Color.miraclesText.opacity(0.1))
@@ -157,8 +176,16 @@ struct ThoughtsView: View {
     private func reload() async {
         do {
             entries = try await NotionService.shared.fetchThoughts(force: true)
+            errorMessage = nil
         } catch is CancellationError { }
-        catch { }
+        catch let err as URLError where err.code == .cancelled { }
+        catch {
+            // Surface the failure so a stalled fetch (network drop, Notion 401)
+            // doesn't silently strand Mom on stale or empty data with no signal
+            // to retry. Using the existing on-disk cache when available so the
+            // UI stays usable while the banner explains the sync issue.
+            errorMessage = "Couldn't sync — pull to retry."
+        }
         isLoading = false
     }
 
@@ -166,12 +193,19 @@ struct ThoughtsView: View {
         let text = newText.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else { return }
         isSending = true
+        let originalText = text
         newText = ""
         inputFocused = false
         do {
             try await NotionService.shared.addThought(content: text, author: myAuthor)
             entries = try await NotionService.shared.fetchThoughts(force: true)
-        } catch { }
+            errorMessage = nil
+        } catch {
+            // Restore the typed text so the user can retry without re-typing,
+            // and surface a banner so the silent failure is visible.
+            newText = originalText
+            errorMessage = "Couldn't post — check connection and tap Send again."
+        }
         isSending = false
     }
 

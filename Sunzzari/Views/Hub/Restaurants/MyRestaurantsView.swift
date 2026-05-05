@@ -71,7 +71,7 @@ struct MyRestaurantsView: View {
                 } else {
                     claudeSearchBar
                     filterBar
-                    Color.white.opacity(0.1).frame(height: 0.5)
+                    Color.miraclesDivider.frame(height: 0.5)
                     claudeBanner
                     restaurantList
                 }
@@ -335,7 +335,7 @@ struct MyRestaurantsView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                        .overlay(Capsule().stroke(Color.miraclesChipStroke, lineWidth: 1))
                     }
                 }
             }
@@ -374,7 +374,7 @@ struct MyRestaurantsView: View {
         .background(value != nil ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
         .clipShape(Capsule())
         .overlay(Capsule().stroke(
-            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
+            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.miraclesChipStroke,
             lineWidth: 1
         ))
     }

@@ -13,6 +13,14 @@ extension Color {
     static let miraclesSage       = Color(hex: "#8FA67E") // sage -- secondary accent
     static let miraclesYellow     = Color(hex: "#F5C76A") // soft yellow -- tertiary highlights / ratings
 
+    // Charcoal-on-cream divider / hairline tokens. Replace `Color.white.opacity(x)`
+    // call sites that sit on the cream/white surfaces with these so the strokes
+    // are actually visible on the light theme. (StoryPlayerView's progress bar
+    // and other dark-on-photo overlays still use Color.white.opacity directly.)
+    static let miraclesDivider    = Color(hex: "#2A2421").opacity(0.10) // hairline rule / faint stroke
+    static let miraclesChipFill   = Color(hex: "#2A2421").opacity(0.06) // chip / capsule fill
+    static let miraclesChipStroke = Color(hex: "#2A2421").opacity(0.15) // chip / capsule stroke
+
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0

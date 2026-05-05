@@ -4,6 +4,12 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Miracles</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Miracles uses your camera to capture photos of wines, restaurants, and moments to share with the family.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Miracles needs access to your photo library so you can post stories and add memories to share with the family.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Miracles can save photos from the family album to your camera roll.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Miracles shows your location on the shared map so your family can see where you are.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

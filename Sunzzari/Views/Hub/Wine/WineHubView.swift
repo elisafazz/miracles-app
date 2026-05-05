@@ -27,7 +27,7 @@ struct WineHubView: View {
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
 
                     Button { showPicker = true } label: {
-                        hubCell(icon: "wand.and.stars", iconColor: .miraclesAccent, title: "Wine Picker", subtitle: "Let Claude choose for us")
+                        hubCell(icon: "wand.and.stars", iconColor: .miraclesAccent, title: "Wine Picker", subtitle: "AI helps pick a wine")
                     }
                     .listRowBackground(Color.miraclesSurface)
                     .listRowSeparator(.hidden)

@@ -36,7 +36,7 @@ struct BestOfView: View {
                         skeletonView
                     } else {
                         categoryFilter.padding(.vertical, 10)
-                        Color.white.opacity(0.1).frame(height: 0.5)
+                        Color.miraclesDivider.frame(height: 0.5)
                         entryList
                     }
                 }
@@ -220,7 +220,7 @@ struct BestOfView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
             }
-            .background(Color.white.opacity(0.05))
+            .background(Color.miraclesSurface)
             .textCase(nil)
         }
         .buttonStyle(.plain)
@@ -244,7 +244,7 @@ struct BestOfView: View {
                         .background(selectedCategory == nil ? Color.miraclesAccent.opacity(0.12) : Color.clear)
                         .foregroundStyle(selectedCategory == nil ? Color.miraclesAccent : Color.miraclesSecondary)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(selectedCategory == nil ? Color.miraclesAccent.opacity(1) : Color.white.opacity(0.2), lineWidth: 1))
+                        .overlay(Capsule().stroke(selectedCategory == nil ? Color.miraclesAccent.opacity(1) : Color.miraclesChipStroke, lineWidth: 1))
                         .shadow(color: selectedCategory == nil ? Color.miraclesAccent.opacity(0.4) : .clear, radius: 6, y: 0)
                 }
                 ForEach(BestOfEntry.Category.allCases, id: \.self) { cat in

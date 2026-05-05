@@ -52,7 +52,7 @@ struct GalleryView: View {
                             .background(favoritesOnly ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
                             .clipShape(Capsule())
                             .overlay(Capsule().stroke(
-                                favoritesOnly ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
+                                favoritesOnly ? Color.miraclesAccent.opacity(0.8) : Color.miraclesChipStroke,
                                 lineWidth: 1
                             ))
                             .shadow(color: favoritesOnly ? Color.miraclesAccent.opacity(0.3) : .clear, radius: 6)
@@ -62,7 +62,7 @@ struct GalleryView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
 
-                    Color.white.opacity(0.1).frame(height: 0.5)
+                    Color.miraclesDivider.frame(height: 0.5)
 
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 4) {

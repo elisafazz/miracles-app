@@ -30,7 +30,7 @@ struct BoopView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
                                     trimmed.isEmpty
-                                        ? Color.white.opacity(0.08)
+                                        ? Color.miraclesChipFill
                                         : Color.miraclesAccent,
                                     lineWidth: 1
                                 )

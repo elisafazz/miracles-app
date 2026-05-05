@@ -22,8 +22,13 @@ final class NotionService: @unchecked Sendable {
     private var activitiesCache: (items: [Activity], at: Date)?
     private var thoughtsCache: (entries: [ThoughtEntry], at: Date)?
     private var coverCache: [String: (url: String?, at: Date)] = [:]
+    private var storiesActiveCache: (entries: [StoryPost], at: Date)?
+    private var storiesArchiveCache: [Int: (entries: [StoryPost], at: Date)] = [:]
     private let cacheTTL: TimeInterval = 300 // 5 minutes
     private let coverCacheTTL: TimeInterval = 3600 // 1 hour — covers rarely change
+    /// Tighter TTL for the active-stories feed so a fresh post shows up quickly
+    /// without forcing the user to pull-to-refresh.
+    private let storiesActiveTTL: TimeInterval = 60
 
     func invalidateBestOf() { bestOfCache = nil }
     func invalidatePhotos() { photosCache = nil }
@@ -32,6 +37,10 @@ final class NotionService: @unchecked Sendable {
     func invalidateWines() { winesCache = nil }
     func invalidateActivities() { activitiesCache = nil }
     func invalidateThoughts() { thoughtsCache = nil }
+    func invalidateStories() {
+        storiesActiveCache = nil
+        storiesArchiveCache.removeAll()
+    }
 
     // MARK: - Disk cache
 
@@ -78,6 +87,10 @@ final class NotionService: @unchecked Sendable {
 
     func thoughtsDiskCache() -> [ThoughtEntry]? {
         loadFromDisk(name: "thoughts").map { parseThoughts(from: $0) }
+    }
+
+    func storiesActiveDiskCache() -> [StoryPost]? {
+        loadFromDisk(name: "stories_active").map { parseStoryPosts(from: $0) }
     }
 
     private var headers: [String: String] {
@@ -409,7 +422,14 @@ final class NotionService: @unchecked Sendable {
 
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                throw NotionError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
+                let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+                // 404 from a database query at our scale is almost always a
+                // missing integration grant rather than a deleted DB. Surface
+                // the actionable error so the user can fix it in Notion UI.
+                if code == 404 {
+                    throw NotionError.integrationNotGranted(databaseID: id)
+                }
+                throw NotionError.httpError(code)
             }
 
             // Fail loud on mid-pagination parse error rather than returning silent partial data.
@@ -425,6 +445,118 @@ final class NotionService: @unchecked Sendable {
         } while startCursor != nil
 
         return try JSONSerialization.data(withJSONObject: ["results": allResults])
+    }
+
+    // MARK: - Stories
+
+    /// Stories visible in the home carousel: posted in the last 24 hours.
+    /// Filter is timestamp-based so we can drop the Archived flag and the cron
+    /// (an earlier draft of this feature; collapsed per c-tagteam adversarial review).
+    func fetchActiveStories(force: Bool = false) async throws -> [StoryPost] {
+        if !force, let cached = storiesActiveCache, Date().timeIntervalSince(cached.at) < storiesActiveTTL {
+            return cached.entries
+        }
+        let cutoff = isoString(forDate: Date().addingTimeInterval(-24 * 60 * 60))
+        do {
+            let data = try await queryDatabase(
+                id: Constants.Notion.storiesDBID,
+                sorts: [["property": "Posted At", "direction": "descending"]],
+                filter: ["property": "Posted At", "date": ["after": cutoff]]
+            )
+            let posts = parseStoryPosts(from: data)
+            storiesActiveCache = (posts, Date())
+            saveToDisk(data, name: "stories_active")
+            return posts
+        } catch {
+            if let diskData = loadFromDisk(name: "stories_active") {
+                let posts = parseStoryPosts(from: diskData)
+                storiesActiveCache = (posts, Date())
+                return posts
+            }
+            throw error
+        }
+    }
+
+    /// All stories from a given calendar year. Used by Archive + Year Recap.
+    func fetchArchiveStories(year: Int, force: Bool = false) async throws -> [StoryPost] {
+        if !force, let cached = storiesArchiveCache[year], Date().timeIntervalSince(cached.at) < cacheTTL {
+            return cached.entries
+        }
+        var comps = DateComponents()
+        comps.year = year; comps.month = 1; comps.day = 1
+        let cal = Calendar(identifier: .gregorian)
+        let yearStart = cal.date(from: comps)!
+        var nextYearComps = comps; nextYearComps.year = year + 1
+        let yearEnd = cal.date(from: nextYearComps)!
+        let filter: [String: Any] = [
+            "and": [
+                ["property": "Posted At", "date": ["on_or_after": isoString(forDate: yearStart)]],
+                ["property": "Posted At", "date": ["before":      isoString(forDate: yearEnd)]]
+            ]
+        ]
+        let data = try await queryDatabase(
+            id: Constants.Notion.storiesDBID,
+            sorts: [["property": "Posted At", "direction": "descending"]],
+            filter: filter
+        )
+        let posts = parseStoryPosts(from: data)
+        storiesArchiveCache[year] = (posts, Date())
+        return posts
+    }
+
+    @discardableResult
+    func createStoryPost(publicID: String, caption: String, person: StoryPost.Person, postedAt: Date, location: String?) async throws -> StoryPost {
+        let titleFmt = DateFormatter(); titleFmt.dateFormat = "yyyy-MM-dd HH:mm"
+        let title = "\(person.rawValue) — \(titleFmt.string(from: postedAt))"
+        var props: [String: Any] = [
+            "Name":      titleProp(title),
+            "Public ID": richTextProp(publicID),
+            "Caption":   richTextProp(caption),
+            "Person":    ["select": ["name": person.rawValue]],
+            "Posted At": dateTimeProp(postedAt)
+        ]
+        if let location, !location.isEmpty {
+            props["Location"] = richTextProp(location)
+        }
+        let body: [String: Any] = [
+            "parent": ["database_id": Constants.Notion.storiesDBID],
+            "properties": props
+        ]
+        try await createPage(body: body)
+        invalidateStories()
+        return StoryPost(
+            id: UUID().uuidString,
+            publicID: publicID,
+            caption: caption,
+            person: person,
+            postedAt: postedAt,
+            location: location
+        )
+    }
+
+    private func parseStoryPosts(from data: Data) -> [StoryPost] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [[String: Any]] else { return [] }
+        let posts: [StoryPost] = results.compactMap { page in
+            guard let id = page["id"] as? String,
+                  let props = page["properties"] as? [String: Any],
+                  let publicID = extractRichText(from: props["Public ID"]),
+                  !publicID.isEmpty,
+                  let postedAt = extractDate(from: props["Posted At"]),
+                  let personRaw = extractSelect(from: props["Person"]),
+                  let person = StoryPost.Person(rawValue: personRaw)
+            else { return nil }
+            return StoryPost(
+                id: id,
+                publicID: publicID,
+                caption: extractRichText(from: props["Caption"]) ?? "",
+                person: person,
+                postedAt: postedAt,
+                location: extractRichText(from: props["Location"])
+            )
+        }
+        logSkipped("stories", total: results.count, parsed: posts.count)
+        return posts
     }
 
     private func createPage(body: [String: Any]) async throws {
@@ -692,6 +824,18 @@ final class NotionService: @unchecked Sendable {
         return ["date": ["start": fmt.string(from: date)]]
     }
 
+    /// Datetime-precision Notion date prop. Stories use this so the 24-hour
+    /// active-window filter compares timestamps, not date-only strings.
+    private func dateTimeProp(_ date: Date) -> [String: Any] {
+        ["date": ["start": isoString(forDate: date)]]
+    }
+
+    private func isoString(forDate date: Date) -> String {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f.string(from: date)
+    }
+
     private func extractTitle(from prop: Any?) -> String? {
         guard let arr = (prop as? [String: Any])?["title"] as? [[String: Any]] else { return nil }
         return arr.compactMap { $0["plain_text"] as? String }.joined()
@@ -827,12 +971,18 @@ final class NotionService: @unchecked Sendable {
         case badURL
         case parseError
         case tooManyRows(Int)
+        /// 404 on a database query is almost always a missing integration grant
+        /// rather than a deleted DB at our scale. Carries the DB id so the user
+        /// can be told exactly which DB to open in Notion.
+        case integrationNotGranted(databaseID: String)
         var errorDescription: String? {
             switch self {
             case .httpError(let code): return "Notion API error: HTTP \(code)"
             case .badURL:              return "Notion API error: malformed URL"
             case .parseError:          return "Notion API error: response parse failed"
             case .tooManyRows(let n):  return "Notion API error: query exceeded \(n) rows"
+            case .integrationNotGranted(let id):
+                return "Notion integration isn't connected to this database (\(String(id.prefix(8)))). Open the database in Notion → ⋯ → Connections → add the integration."
             }
         }
     }

@@ -46,7 +46,7 @@ struct MyWineView: View {
                     skeletonView
                 } else {
                     filterBar
-                    Color.white.opacity(0.1).frame(height: 0.5)
+                    Color.miraclesDivider.frame(height: 0.5)
                     wineList
                 }
             }
@@ -109,7 +109,7 @@ struct MyWineView: View {
             }
             .padding(.vertical, 10)
 
-            Color.white.opacity(0.06).frame(height: 0.5)
+            Color.miraclesDivider.frame(height: 0.5)
 
             // Row 2: Dropdowns + Cooking pill + Clear All
             ScrollView(.horizontal, showsIndicators: false) {
@@ -158,7 +158,7 @@ struct MyWineView: View {
                             .background(cookingOnly ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
                             .clipShape(Capsule())
                             .overlay(Capsule().stroke(
-                                cookingOnly ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
+                                cookingOnly ? Color.miraclesAccent.opacity(0.8) : Color.miraclesChipStroke,
                                 lineWidth: 1
                             ))
                     }
@@ -179,7 +179,7 @@ struct MyWineView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
                             .clipShape(Capsule())
-                            .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                            .overlay(Capsule().stroke(Color.miraclesChipStroke, lineWidth: 1))
                         }
                     }
                 }
@@ -219,7 +219,7 @@ struct MyWineView: View {
         .background(value != nil ? Color.miraclesAccent.opacity(0.12) : Color.miraclesSurface)
         .clipShape(Capsule())
         .overlay(Capsule().stroke(
-            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.white.opacity(0.15),
+            value != nil ? Color.miraclesAccent.opacity(0.8) : Color.miraclesChipStroke,
             lineWidth: 1
         ))
     }

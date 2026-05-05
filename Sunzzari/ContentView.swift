@@ -21,23 +21,17 @@ struct ContentView: View {
                     }
                     .tag(1)
 
-                NavigationStack { StatusView() }
+                StoriesView()
                     .tabItem {
-                        Label("Status", systemImage: "bolt.horizontal.circle.fill")
+                        Label("Stories", systemImage: "circle.dashed.inset.filled")
                     }
                     .tag(2)
-
-                HubView()
-                    .tabItem {
-                        Label("Hub", systemImage: "square.grid.2x2.fill")
-                    }
-                    .tag(3)
 
                 MoreView()
                     .tabItem {
                         Label("More", systemImage: "ellipsis.circle.fill")
                     }
-                    .tag(4)
+                    .tag(3)
             }
             .tint(.miraclesAccent)
             .fontDesign(.serif)
@@ -84,8 +78,6 @@ struct ContentView: View {
                 showWeeklyBestOf = true
             }
             await BoopService.shared.checkForBoops()
-            await StatusService.shared.checkForStatus()
-            await LocationService.shared.requestAlwaysAuthorization()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -93,7 +85,6 @@ struct ContentView: View {
                     let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
                     try? await UNUserNotificationCenter.current().setBadgeCount(delivered.count)
                     await BoopService.shared.checkForBoops()
-                    await StatusService.shared.checkForStatus()
                     await DailySetupService.shared.runDailySetup()
                 }
             }

@@ -80,10 +80,17 @@ private final class LocationDelegate: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    /// Returns the Notion page ID for the user's identity. Forked from Sunzzari's
+    /// 2-person model; the original code shipped with `isElisa ? elisa : mom`,
+    /// which silently routed Sister's location updates to Mom's page. Switching
+    /// on the full enum closes that data-corruption bug.
     private func ownPageID() -> String {
-        AppIdentity.isElisa
-            ? Constants.Status.elisaPageID
-            : Constants.Status.momPageID
+        switch AppIdentity.current {
+        case .elisa:  return Constants.Status.elisaPageID
+        case .mom:    return Constants.Status.momPageID
+        case .sister: return Constants.Status.sisterPageID
+        case .none:   return Constants.Status.elisaPageID
+        }
     }
 }
 

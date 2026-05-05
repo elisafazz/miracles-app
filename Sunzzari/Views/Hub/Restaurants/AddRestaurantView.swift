@@ -229,13 +229,13 @@ struct AddRestaurantView: View {
             }
 
             HStack {
-                Color.white.opacity(0.15).frame(height: 0.5)
+                Color.miraclesChipStroke.frame(height: 0.5)
                 Text("or fill manually")
                     .font(.system(.caption, design: .serif))
                     .foregroundStyle(Color.miraclesSecondary)
                     .fixedSize()
                     .padding(.horizontal, 8)
-                Color.white.opacity(0.15).frame(height: 0.5)
+                Color.miraclesChipStroke.frame(height: 0.5)
             }
         }
     }

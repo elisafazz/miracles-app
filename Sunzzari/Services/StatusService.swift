@@ -1,15 +1,16 @@
 import Foundation
 import CoreLocation
-import UIKit
-import UserNotifications
 
+/// Infra service kept after the Status tab was replaced by Stories.
+/// Handles APNs token storage, push fan-out via Vercel backend, location ping,
+/// and the shared Tier-3 Today pick — all still load-bearing for other features
+/// (boops, AddEntryView pushes, daily setup, location updates).
 final class StatusService: @unchecked Sendable {
     static let shared = StatusService()
     private init() {}
 
     private let notionBase = "https://api.notion.com/v1"
-    private let ntfyBase   = "https://ntfy.sh"
-    private let lastCheckKey = "miracles_status_last_check"
+    private let pendingTokenKey = "miracles_pending_apns_token"
 
     /// Stable anchor page for shared state (Today pick). Elisa is the primary
     /// user and owns this page; Mom and Sister read/write it for the shared
@@ -22,13 +23,6 @@ final class StatusService: @unchecked Sendable {
             "Notion-Version": Constants.Notion.version,
             "Content-Type":   "application/json"
         ]
-    }
-
-    /// Stable 6-char tag to identify this device's sends
-    private var deviceTag: String {
-        let raw = UIDevice.current.identifierForVendor?.uuidString
-            .replacingOccurrences(of: "-", with: "").lowercased() ?? "unknown"
-        return String(raw.prefix(6))
     }
 
     // MARK: - Identity routing
@@ -61,88 +55,7 @@ final class StatusService: @unchecked Sendable {
         ])
     }
 
-    // MARK: - Status fetch / update (3-person variant)
-
-    /// Fetches the StatusEntry rows for all 3 family members in parallel.
-    /// Returns them in canonical order: [.elisa, .mom, .sister]. Pages with
-    /// empty IDs are skipped silently rather than throwing.
-    func fetchAll() async throws -> [StatusEntry] {
-        async let e = fetchPage(person: .elisa)
-        async let m = fetchPage(person: .mom)
-        async let s = fetchPage(person: .sister)
-        let entries = try await [e, m, s].compactMap { $0 }
-        return entries
-    }
-
-    private func fetchPage(person: MiraclesPerson) async throws -> StatusEntry? {
-        let id = pageID(for: person)
-        guard !id.isEmpty, let url = URL(string: "\(notionBase)/pages/\(id)") else { return nil }
-        var req = URLRequest(url: url)
-        req.httpMethod = "GET"
-        notionHeaders.forEach { req.setValue($1, forHTTPHeaderField: $0) }
-        let (data, _) = try await URLSession.shared.data(for: req)
-        return try parseEntry(from: data, fallbackName: person.rawValue)
-    }
-
-    private func parseEntry(from data: Data, fallbackName: String) throws -> StatusEntry {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let id = json["id"] as? String,
-            let props = json["properties"] as? [String: Any]
-        else { throw URLError(.cannotParseResponse) }
-
-        let nameArr = (props["Name"] as? [String: Any])?["title"] as? [[String: Any]]
-        let nameStr = nameArr?.first?["plain_text"] as? String ?? fallbackName
-
-        let mood = (props["Mood"] as? [String: Any])?["number"] as? Int ?? 50
-        let adjArr = (props["Adjective"] as? [String: Any])?["rich_text"] as? [[String: Any]]
-        let adjective = adjArr?.compactMap { $0["plain_text"] as? String }.joined() ?? ""
-
-        let moodUpdatedAt = parseDate(from: props["MoodUpdatedAt"])
-        let lat  = (props["Latitude"]  as? [String: Any])?["number"] as? Double
-        let lon  = (props["Longitude"] as? [String: Any])?["number"] as? Double
-        let locUpdatedAt = parseDate(from: props["LocationUpdatedAt"])
-
-        return StatusEntry(
-            id: id, name: nameStr, mood: mood, adjective: adjective,
-            moodUpdatedAt: moodUpdatedAt, latitude: lat, longitude: lon,
-            locationUpdatedAt: locUpdatedAt
-        )
-    }
-
-    private func parseDate(from prop: Any?) -> Date? {
-        guard let d = prop as? [String: Any],
-              let dateObj = d["date"] as? [String: Any],
-              let str = dateObj["start"] as? String else { return nil }
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = formatter.date(from: str) { return date }
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter.date(from: str)
-    }
-
-    func updateMood(_ mood: Int, for pageID: String) async throws {
-        let isoNow = isoString(for: Date())
-        try await patchPage(id: pageID, body: [
-            "properties": [
-                "Mood":          ["number": mood],
-                "MoodUpdatedAt": ["date": ["start": isoNow]]
-            ]
-        ])
-    }
-
-    func updateAdjective(_ adjective: String, for pageID: String) async throws {
-        try await patchPage(id: pageID, body: [
-            "properties": [
-                "Adjective":     ["rich_text": [["text": ["content": adjective]]]],
-                "MoodUpdatedAt": ["date": ["start": isoString(for: Date())]]
-            ]
-        ])
-    }
-
     // MARK: - APNs push (via Vercel backend)
-
-    private let pendingTokenKey = "miracles_pending_apns_token"
 
     /// Store this device's APNs token in its own Notion Status page.
     /// Always caches the token in UserDefaults first. If identity is not yet set
@@ -250,52 +163,6 @@ final class StatusService: @unchecked Sendable {
                 "TodayPick": ["rich_text": [["text": ["content": value]]]]
             ]
         ])
-    }
-
-    // MARK: - Receive status notifications (foreground polling)
-
-    func checkForStatus() async {
-        let lastCheck = UserDefaults.standard.integer(forKey: lastCheckKey)
-        let now = Int(Date().timeIntervalSince1970)
-        UserDefaults.standard.set(now, forKey: lastCheckKey)
-
-        guard lastCheck > 0 else { return }
-        let since = max(lastCheck, now - 3600)
-        guard let url = URL(string: "\(ntfyBase)/\(Constants.Status.ntfyTopic)/json?since=\(since)") else { return }
-        var pollReq = URLRequest(url: url)
-        pollReq.timeoutInterval = 10
-        guard let (data, _) = try? await URLSession.shared.data(for: pollReq) else { return }
-
-        let lines = String(data: data, encoding: .utf8)?
-            .components(separatedBy: "\n")
-            .filter { !$0.isEmpty } ?? []
-
-        for line in lines {
-            guard
-                let lineData = line.data(using: .utf8),
-                let event = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
-                let evType = event["event"] as? String, evType == "message",
-                let message = event["message"] as? String,
-                let tags = event["tags"] as? [String]
-            else { continue }
-
-            // Skip messages sent from this device
-            if tags.contains(deviceTag) { continue }
-
-            let evID = event["id"] as? String ?? UUID().uuidString
-            let delivered = await UNUserNotificationCenter.current().deliveredNotifications()
-            let content = UNMutableNotificationContent()
-            content.title = "Status update"
-            content.body = message
-            content.sound = .default
-            content.badge = NSNumber(value: delivered.count + 1)
-            let req = UNNotificationRequest(
-                identifier: "miracles-status-\(evID)",
-                content: content,
-                trigger: nil
-            )
-            try? await UNUserNotificationCenter.current().add(req)
-        }
     }
 
     // MARK: - Helpers

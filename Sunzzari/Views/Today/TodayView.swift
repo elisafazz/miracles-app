@@ -45,7 +45,7 @@ struct TodayView: View {
                                 .font(.system(size: 16, weight: .semibold, design: .serif))
                                 .foregroundStyle(Color.miraclesAccent)
                                 .padding(8)
-                                .background(Color.white.opacity(0.08))
+                                .background(Color.miraclesChipFill)
                                 .clipShape(Circle())
                         }
                     }
@@ -206,7 +206,7 @@ struct TodayView: View {
                     .fill(Color.miraclesSurface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                            .stroke(Color.miraclesChipFill, lineWidth: 1)
                     )
 
                 if sendingBoop == preset {

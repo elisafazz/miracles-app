@@ -24,7 +24,7 @@ struct PageHeader<Trailing: View>: View {
             .padding(.top, 20)
             .padding(.bottom, 16)
 
-            Divider().background(Color.white.opacity(0.1))
+            Divider().background(Color.miraclesDivider)
         }
     }
 }

@@ -245,6 +245,7 @@ struct StoryPlayerView: View {
     /// .task(id:) cancels and re-fires. We anchor `startDate` so elapsed time
     /// equals the saved `progress`, and the bar continues smoothly from where
     /// it paused instead of snapping back to zero.
+    @MainActor
     private func runProgressLoop() async {
         if progress >= 1.0 { progress = 0 }
         let anchor = progress

@@ -125,9 +125,16 @@ struct ContentView: View {
     /// prefixed identifier the inbox can route on. Force-fresh fetch so a
     /// story posted seconds ago lands in the inbox instead of being masked
     /// by a stale cache. Identity gate skips first-launch state where
-    /// AppIdentity.current is nil.
+    /// AppIdentity.current is nil. Debounced to 30s so rapid foreground/
+    /// background cycles don't burn through the Notion 3 req/s rate limit.
     private func syncStoriesIntoInbox() async {
         guard let identity = AppIdentity.current else { return }
+        let key = "miracles_last_story_sync"
+        let last = UserDefaults.standard.double(forKey: key)
+        let now = Date().timeIntervalSince1970
+        if last > 0, now - last < 30 { return }
+        UserDefaults.standard.set(now, forKey: key)
+
         let stories: [StoryPost]
         do {
             stories = try await NotionService.shared.fetchActiveStories(force: true)

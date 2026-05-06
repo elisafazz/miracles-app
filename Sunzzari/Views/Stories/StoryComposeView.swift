@@ -67,6 +67,7 @@ struct StoryComposeView: View {
                     }
                     .padding(20)
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("New Story")
             .navigationBarTitleDisplayMode(.inline)

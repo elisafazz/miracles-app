@@ -73,6 +73,8 @@ struct ContentView: View {
                     break
                 case .weeklyBestOf:
                     showWeeklyBestOf = true
+                case .storyUpdate:
+                    selectedTab = 2
                 }
             }
         }
@@ -94,6 +96,7 @@ struct ContentView: View {
             }
             await BoopService.shared.checkForBoops()
             await syncWeeklyBestOfFromDelivered()
+            await syncStoriesIntoInbox()
             await syncBadgeFromInbox()
         }
         .onChange(of: scenePhase) { _, phase in
@@ -101,6 +104,7 @@ struct ContentView: View {
                 Task {
                     await BoopService.shared.checkForBoops()
                     await syncWeeklyBestOfFromDelivered()
+                    await syncStoriesIntoInbox()
                     await DailySetupService.shared.runDailySetup()
                     await syncBadgeFromInbox()
                 }
@@ -112,6 +116,43 @@ struct ContentView: View {
     private func syncBadgeFromInbox() async {
         let count = NotificationInboxService.shared.unreadCount
         try? await UNUserNotificationCenter.current().setBadgeCount(count)
+    }
+
+    /// Pull active stories from Notion and append every other-member entry into
+    /// the inbox. Foreground-only path -- background APNs alone cannot guarantee
+    /// inbox aggregation since willPresent only runs in foreground and remote
+    /// pushes don't carry a prefixed identifier the inbox can route on. Dedup is
+    /// by story.id (NotificationInboxService.append is a no-op for an existing id).
+    private func syncStoriesIntoInbox() async {
+        let stories: [StoryPost]
+        do {
+            stories = try await NotionService.shared.fetchActiveStories(force: false)
+        } catch {
+            return
+        }
+        let me: StoryPost.Person
+        switch AppIdentity.current {
+        case .mom:    me = .mom
+        case .sister: me = .sister
+        default:      me = .elisa
+        }
+        for story in stories where story.person != me {
+            let subtitle: String
+            if !story.caption.isEmpty {
+                subtitle = story.caption
+            } else if let loc = story.location, !loc.isEmpty {
+                subtitle = loc
+            } else {
+                subtitle = "Tap to watch"
+            }
+            NotificationInboxService.shared.append(
+                id: "miracles-story-\(story.id)",
+                type: .storyUpdate,
+                title: "\(story.person.displayName) posted a story",
+                subtitle: subtitle,
+                timestamp: story.postedAt
+            )
+        }
     }
 
     /// Recovery path: if the Sunday 8pm weekly notification fired while the app was

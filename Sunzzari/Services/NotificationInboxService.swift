@@ -4,6 +4,7 @@ import UserNotifications
 enum InboxEntryType: String, Codable {
     case boop
     case weeklyBestOf
+    case storyUpdate
 }
 
 struct InboxEntry: Identifiable, Codable, Equatable {

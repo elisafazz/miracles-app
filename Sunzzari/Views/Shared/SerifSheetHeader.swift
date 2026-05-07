@@ -39,7 +39,7 @@ struct SerifSheetHeader<Leading: View, Trailing: View>: View {
 
             Text(title)
                 .font(.system(size: 17, weight: .semibold, design: .serif))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.miraclesText)
                 .lineLimit(1)
         }
         .padding(.vertical, 14)

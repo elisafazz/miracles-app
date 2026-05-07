@@ -120,8 +120,7 @@ struct YearRecapView: View {
         } onPressingChanged: { pressing in
             isPaused = pressing
         }
-        .navigationTitle("\(String(year)) Recap")
-        .navigationBarTitleDisplayMode(.inline)
+        .miraclesInlineTitle("\(String(year)) Recap")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") { dismiss() }

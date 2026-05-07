@@ -132,9 +132,7 @@ struct ItemDetailSheet: View {
                 .padding()
             }
             .background(Color.miraclesBackground)
-            .navigationTitle(item.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .miraclesInlineTitle(item.name)
             .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

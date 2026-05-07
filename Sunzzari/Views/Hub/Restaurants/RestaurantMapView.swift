@@ -286,8 +286,7 @@ struct RestaurantMapView: View {
                 .padding(.bottom, 32)
             }
         }
-        .navigationTitle("Map")
-        .navigationBarTitleDisplayMode(.inline)
+        .miraclesInlineTitle("Map")
         .sheet(item: selectedRestaurant) { r in
             restaurantCallout(r)
                 .presentationDetents([.fraction(0.35)])

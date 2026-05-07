@@ -22,6 +22,8 @@ struct ThoughtsView: View {
             Color.miraclesBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                PageHeader("Thoughts")
+
                 if isLoading {
                     Spacer()
                     ProgressView().tint(Color.miraclesAccent)
@@ -115,8 +117,7 @@ struct ThoughtsView: View {
                 .padding(.vertical, 12)
             }
         }
-        .navigationTitle("Thoughts")
-        .navigationBarTitleDisplayMode(.large)
+        .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
     }
 

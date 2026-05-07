@@ -66,8 +66,7 @@ struct NotificationInboxView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
-            .navigationTitle("Inbox")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Inbox")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }

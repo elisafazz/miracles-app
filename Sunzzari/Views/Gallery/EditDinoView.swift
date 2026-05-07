@@ -101,8 +101,7 @@ struct EditPhotoView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Edit Photo")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Edit Photo")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

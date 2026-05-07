@@ -186,8 +186,7 @@ struct AddWineView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Wine")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Wine")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

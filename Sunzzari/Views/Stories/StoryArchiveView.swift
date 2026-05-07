@@ -53,9 +53,7 @@ struct StoryArchiveView: View {
                 }
             }
         }
-        .navigationTitle("Archive")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .miraclesInlineTitle("Archive")
         .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

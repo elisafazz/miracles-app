@@ -103,8 +103,7 @@ struct AddActivityView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Activity")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Activity")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

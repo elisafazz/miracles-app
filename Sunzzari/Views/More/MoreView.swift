@@ -2,8 +2,8 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
-/// 4th tab content. Now also hosts the destinations that previously lived behind
-/// the Hub tab (Travel, Gallery, Wine, Restaurants, Activities, On This Day).
+/// 4th tab content. Hosts Wine, Restaurants, Activities, On This Day,
+/// Best Of, and Settings.
 struct MoreView: View {
     @State private var notifAuthorized: Bool = true
     @State private var showSettingsPrompt: Bool = false
@@ -11,89 +11,81 @@ struct MoreView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("Family") {
-                    NavigationLink {
-                        TravelView()
-                    } label: {
-                        moreRow(icon: "map.fill", title: "Travel", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        GalleryView()
-                    } label: {
-                        moreRow(icon: "photo.stack.fill", title: "Gallery", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        WineHubView()
-                    } label: {
-                        moreRow(icon: "wineglass.fill", title: "Wine", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        RestaurantHubView()
-                    } label: {
-                        moreRow(icon: "fork.knife", title: "Restaurants", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        ActivitiesHubView()
-                    } label: {
-                        moreRow(icon: "figure.walk", title: "Activities", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        OnThisDayView()
-                    } label: {
-                        moreRow(icon: "calendar.badge.clock", title: "On This Day", color: .miraclesAccent)
-                    }
-                }
-                .listRowBackground(Color.miraclesSurface)
+            ZStack {
+                Color.miraclesBackground.ignoresSafeArea()
 
-                Section {
-                    NavigationLink {
-                        BestOfView()
-                    } label: {
-                        moreRow(icon: "star.fill", title: "Best Of", color: .miraclesAccent)
-                    }
-                    NavigationLink {
-                        SearchView()
-                    } label: {
-                        moreRow(icon: "magnifyingglass", title: "Search", color: .miraclesSage)
-                    }
-                    NavigationLink {
-                        SettingsView(onComplete: {})
-                    } label: {
-                        moreRow(icon: "gearshape.fill", title: "Settings", color: .miraclesText)
-                    }
-                    if !notifAuthorized {
-                        Button {
-                            showSettingsPrompt = true
-                        } label: {
-                            HStack(spacing: 14) {
-                                Image(systemName: "bell.slash.fill")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(Color.miraclesAccent)
-                                    .frame(width: 28)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Notifications are off")
-                                        .font(.system(size: 16, design: .serif))
-                                        .foregroundStyle(Color.miraclesText)
-                                    Text("Tap to open iOS Settings")
-                                        .font(.system(size: 12, design: .serif))
-                                        .foregroundStyle(Color.miraclesSecondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(Color.miraclesSecondary)
+                VStack(spacing: 0) {
+                    PageHeader("More")
+
+                    List {
+                        Section("Family") {
+                            NavigationLink {
+                                WineHubView()
+                            } label: {
+                                moreRow(icon: "wineglass.fill", title: "Wine", color: .miraclesAccent)
                             }
-                            .padding(.vertical, 4)
+                            NavigationLink {
+                                RestaurantHubView()
+                            } label: {
+                                moreRow(icon: "fork.knife", title: "Restaurants", color: .miraclesAccent)
+                            }
+                            NavigationLink {
+                                ActivitiesHubView()
+                            } label: {
+                                moreRow(icon: "figure.walk", title: "Activities", color: .miraclesAccent)
+                            }
+                            NavigationLink {
+                                OnThisDayView()
+                            } label: {
+                                moreRow(icon: "calendar.badge.clock", title: "On This Day", color: .miraclesAccent)
+                            }
                         }
+                        .listRowBackground(Color.miraclesSurface)
+
+                        Section {
+                            NavigationLink {
+                                BestOfView()
+                            } label: {
+                                moreRow(icon: "star.fill", title: "Best Of", color: .miraclesAccent)
+                            }
+                            NavigationLink {
+                                SettingsView(onComplete: {})
+                            } label: {
+                                moreRow(icon: "gearshape.fill", title: "Settings", color: .miraclesText)
+                            }
+                            if !notifAuthorized {
+                                Button {
+                                    showSettingsPrompt = true
+                                } label: {
+                                    HStack(spacing: 14) {
+                                        Image(systemName: "bell.slash.fill")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(Color.miraclesAccent)
+                                            .frame(width: 28)
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Notifications are off")
+                                                .font(.system(size: 16, design: .serif))
+                                                .foregroundStyle(Color.miraclesText)
+                                            Text("Tap to open iOS Settings")
+                                                .font(.system(size: 12, design: .serif))
+                                                .foregroundStyle(Color.miraclesSecondary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(Color.miraclesSecondary)
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
+                        }
+                        .listRowBackground(Color.miraclesSurface)
                     }
+                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
-                .listRowBackground(Color.miraclesSurface)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(Color.miraclesBackground)
-            .navigationTitle("More")
+            .toolbar(.hidden, for: .navigationBar)
             .task { await refreshNotificationStatus() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {

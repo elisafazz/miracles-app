@@ -128,8 +128,7 @@ struct BulkImportView: View {
                     }
                 }
             }
-            .navigationTitle("Bulk Import")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Bulk Import")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if !isUploading {

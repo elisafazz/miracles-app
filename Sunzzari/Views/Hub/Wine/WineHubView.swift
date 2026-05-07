@@ -12,13 +12,6 @@ struct WineHubView: View {
                 SerifNavHeader("Wine")
 
                 List {
-                    NavigationLink(destination: MyWineView()) {
-                        hubCell(icon: "wineglass", title: "My Wine", subtitle: "Browse your cellar")
-                    }
-                    .listRowBackground(Color.miraclesSurface)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-
                     Button { showAdd = true } label: {
                         hubCell(icon: "plus.circle", title: "Add Wine", subtitle: "Log a bottle")
                     }

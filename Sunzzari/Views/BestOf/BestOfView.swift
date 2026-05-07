@@ -9,16 +9,30 @@ struct BestOfView: View {
     @State private var expandedYears: Set<Int> = []
     @State private var selectedEntry: BestOfEntry? = nil
     @State private var entryToEdit: BestOfEntry? = nil
+    @State private var searchQuery: String = ""
     @Namespace private var cardNamespace
 
     private let currentYear = 2026
 
+    private var trimmedQuery: String {
+        searchQuery.trimmingCharacters(in: .whitespaces)
+    }
+
+    private var searchedEntries: [BestOfEntry] {
+        guard !trimmedQuery.isEmpty else { return entries }
+        return entries.filter {
+            $0.entry.localizedCaseInsensitiveContains(trimmedQuery) ||
+            $0.notes.localizedCaseInsensitiveContains(trimmedQuery) ||
+            $0.category.rawValue.localizedCaseInsensitiveContains(trimmedQuery)
+        }
+    }
+
     private var pastYears: [Int] {
-        Array(Set(entries.map(\.year)).filter { $0 < currentYear && $0 != 1996 }).sorted(by: >)
+        Array(Set(searchedEntries.map(\.year)).filter { $0 < currentYear && $0 != 1996 }).sorted(by: >)
     }
 
     private func entriesFor(year: Int) -> [BestOfEntry] {
-        entries.filter {
+        searchedEntries.filter {
             $0.year == year &&
             (selectedCategory == nil || $0.category == selectedCategory)
         }
@@ -31,6 +45,10 @@ struct BestOfView: View {
 
                 VStack(spacing: 0) {
                     SerifNavHeader("Best Of", showsBack: false)
+
+                    searchField
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
 
                     if isLoading {
                         skeletonView
@@ -225,6 +243,41 @@ struct BestOfView: View {
         }
         .buttonStyle(.plain)
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+    }
+
+    // MARK: - Search field
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 14, weight: .semibold, design: .serif))
+                .foregroundStyle(Color.miraclesSecondary)
+
+            TextField("Search Best Of...", text: $searchQuery)
+                .font(.system(size: 14, design: .serif))
+                .foregroundStyle(Color.miraclesText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.miraclesSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.miraclesSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.miraclesText.opacity(0.08), lineWidth: 1)
+        )
     }
 
     // MARK: - Category filter

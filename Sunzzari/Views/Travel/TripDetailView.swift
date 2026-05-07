@@ -103,9 +103,7 @@ struct TripDetailView: View {
                 mainContent
             }
         }
-        .navigationTitle(trip.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .miraclesInlineTitle(trip.name)
         .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

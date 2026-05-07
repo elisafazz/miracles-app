@@ -146,8 +146,7 @@ struct AddMemoryView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Memory")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Memory")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

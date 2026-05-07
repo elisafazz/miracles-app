@@ -78,8 +78,7 @@ struct WeeklyBestOfInputView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("This Week")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("This Week")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }

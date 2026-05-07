@@ -76,9 +76,7 @@ struct StoryComposeView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
             }
-            .navigationTitle("New Story")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .miraclesInlineTitle("New Story")
             .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

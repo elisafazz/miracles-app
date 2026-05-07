@@ -174,8 +174,7 @@ struct AddRestaurantView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Restaurant")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Restaurant")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

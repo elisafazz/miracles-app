@@ -77,8 +77,7 @@ struct BoopView: View {
                 .padding(20)
             }
             .background(Color.miraclesBackground)
-            .navigationTitle("Custom Boop")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Custom Boop")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

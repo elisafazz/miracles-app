@@ -139,8 +139,7 @@ struct AddPhotoView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Photo")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Photo")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }

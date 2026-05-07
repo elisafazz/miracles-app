@@ -150,8 +150,7 @@ struct AddEntryView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("New Entry")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("New Entry")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

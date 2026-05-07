@@ -48,7 +48,7 @@ struct SerifNavHeader<Trailing: View>: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
                     .font(.system(size: 34, weight: .bold, design: .serif))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.miraclesText)
                 Spacer()
                 trailing
             }

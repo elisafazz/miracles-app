@@ -118,8 +118,7 @@ struct EditMemoryView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Edit Memory")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Edit Memory")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.miraclesSecondary)

@@ -36,8 +36,7 @@ struct WinePickerView: View {
                 }
                 .animation(.easeInOut(duration: 0.25), value: step)
             }
-            .navigationTitle("Wine Picker")
-            .navigationBarTitleDisplayMode(.inline)
+            .miraclesInlineTitle("Wine Picker")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }

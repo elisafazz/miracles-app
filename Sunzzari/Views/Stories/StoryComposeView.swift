@@ -32,7 +32,18 @@ struct StoryComposeView: View {
 
     @FocusState private var isInputFocused: Bool
 
+    // Caption preview overlay placement. Starts at .bottomLeading (offset 0,0
+    // = anchor position) and the user can drag it to reposition. Drag is
+    // CLAMPED to safe bounds so the rendered text never extends outside the
+    // photo's frame -- that off-bounds rendering caused the iOS 26 horizontal-
+    // shift bug in a prior commit (location overlay started at y: -218).
+    @State private var captionOffset: CGSize = .zero
+    @State private var captionDragInProgress: CGSize = .zero
+
     private static let photoHeight: CGFloat = 480
+
+    private static let captionDragMaxX: CGFloat = 100
+    private static let captionDragMaxY: CGFloat = 400
 
     private var currentPerson: StoryPost.Person {
         switch AppIdentity.current {
@@ -106,10 +117,13 @@ struct StoryComposeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: Self.photoHeight)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(alignment: .bottomLeading) { captionPreviewOverlay }
                     .overlay(alignment: .topTrailing) {
                         Button {
                             self.image = nil
                             self.pickerItem = nil
+                            self.captionOffset = .zero
+                            self.captionDragInProgress = .zero
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 24, design: .serif))
@@ -192,6 +206,42 @@ struct StoryComposeView: View {
         }
     }
 
+    /// Live caption preview rendered on the photo. Anchored bottom-leading so
+    /// the initial position is inside the photo's frame. User can drag to
+    /// reposition; offset is clamped on drag end so text never escapes the
+    /// photo's bounds.
+    @ViewBuilder
+    private var captionPreviewOverlay: some View {
+        if !caption.isEmpty {
+            Text(caption)
+                .font(.system(.body, design: .serif, weight: .medium))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color.black.opacity(0.45))
+                .clipShape(Capsule())
+                .padding(16)
+                .offset(
+                    x: captionOffset.width + captionDragInProgress.width,
+                    y: captionOffset.height + captionDragInProgress.height
+                )
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            captionDragInProgress = value.translation
+                        }
+                        .onEnded { value in
+                            let newX = captionOffset.width + value.translation.width
+                            let newY = captionOffset.height + value.translation.height
+                            captionOffset.width = max(-Self.captionDragMaxX, min(Self.captionDragMaxX, newX))
+                            captionOffset.height = max(-Self.captionDragMaxY, min(0, newY))
+                            captionDragInProgress = .zero
+                        }
+                )
+        }
+    }
+
     // MARK: - Actions
 
     private func maybeAutoLaunchCamera() async {
@@ -247,11 +297,17 @@ struct StoryComposeView: View {
         defer { isPosting = false }
 
         do {
+            // Bake caption at user's dragged position into the upload image.
+            // Pass empty caption to Notion so player overlay does not double-
+            // render. If caption is empty, bake is a no-op and we upload the
+            // original.
+            let imageToUpload = bakeCaptionIntoImage() ?? originalImage
+
             let publicID: String
             if let cached = lastUploadedPublicID {
                 publicID = cached
             } else {
-                publicID = try await CloudinaryService.shared.uploadStory(image: originalImage)
+                publicID = try await CloudinaryService.shared.uploadStory(image: imageToUpload)
                 lastUploadedPublicID = publicID
             }
 
@@ -259,7 +315,7 @@ struct StoryComposeView: View {
             let trimmedCaption = caption.trimmingCharacters(in: .whitespacesAndNewlines)
             let post = try await NotionService.shared.createStoryPost(
                 publicID: publicID,
-                caption: trimmedCaption,
+                caption: "",
                 person: currentPerson,
                 postedAt: Date(),
                 location: trimmedLocation.isEmpty ? nil : trimmedLocation
@@ -284,6 +340,43 @@ struct StoryComposeView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Render the photo + caption preview at the user's dragged position into
+    /// a single UIImage at upload time. Returns nil if caption is empty (the
+    /// caller uploads the original image instead).
+    @MainActor
+    private func bakeCaptionIntoImage() -> UIImage? {
+        guard let originalImage = image else { return nil }
+        let trimmed = caption.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let displayWidth = UIScreen.main.bounds.width - 40
+        let displayHeight = Self.photoHeight
+
+        let composed = ZStack(alignment: .bottomLeading) {
+            Image(uiImage: originalImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: displayWidth, height: displayHeight)
+                .clipped()
+
+            Text(caption)
+                .font(.system(.body, design: .serif, weight: .medium))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color.black.opacity(0.45))
+                .clipShape(Capsule())
+                .padding(16)
+                .offset(x: captionOffset.width, y: captionOffset.height)
+        }
+        .frame(width: displayWidth, height: displayHeight)
+
+        let renderer = ImageRenderer(content: composed)
+        renderer.scale = 3
+        return renderer.uiImage
     }
 }
 

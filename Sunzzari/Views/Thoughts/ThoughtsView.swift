@@ -55,6 +55,7 @@ struct ThoughtsView: View {
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
+                    .scrollDismissesKeyboard(.interactively)
                     .refreshable { await reload() }
                 }
 

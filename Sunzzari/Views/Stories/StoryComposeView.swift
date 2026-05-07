@@ -32,7 +32,7 @@ struct StoryComposeView: View {
 
     @FocusState private var isInputFocused: Bool
 
-    private static let photoHeight: CGFloat = 280
+    private static let photoHeight: CGFloat = 480
 
     private var currentPerson: StoryPost.Person {
         switch AppIdentity.current {
@@ -47,21 +47,23 @@ struct StoryComposeView: View {
             ZStack {
                 Color.miraclesBackground.ignoresSafeArea()
 
-                VStack(spacing: 16) {
-                    photoArea
-                    if image != nil {
-                        captionField
-                        locationField
+                ScrollView {
+                    VStack(spacing: 16) {
+                        photoArea
+                        if image != nil {
+                            captionField
+                            locationField
+                        }
+                        if let errorMessage {
+                            Text(errorMessage)
+                                .font(.system(.caption, design: .serif))
+                                .foregroundStyle(.red)
+                                .multilineTextAlignment(.center)
+                        }
                     }
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .font(.system(.caption, design: .serif))
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.center)
-                    }
-                    Spacer()
+                    .padding(20)
                 }
-                .padding(20)
+                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("New Story")
             .navigationBarTitleDisplayMode(.inline)

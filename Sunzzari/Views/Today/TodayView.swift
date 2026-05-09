@@ -1,14 +1,17 @@
 import SwiftUI
 import UIKit
 
-// Miracles boop presets (6 total, defined 2026-04-30 by Elisa)
+// Miracles boop presets
 private let homeBoops: [String] = [
-    "SUGALEE AND LA",
-    "haiiiiiiii",
-    "i do love you",
-    "have a lovely day",
+    "SUGALEE AND LA 🐶",
+    "haiiiiiiii 😬",
+    "i do love you 💕",
+    "have a lovely day 🌻",
     "dump 💩",
-    "need a glass of wine",
+    "need a glass of wine 🍷",
+    "Hangry 👿",
+    "wha doing 🐣",
+    "strong 💪",
 ]
 
 struct TodayView: View {

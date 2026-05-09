@@ -33,9 +33,11 @@ final class BoopService: @unchecked Sendable {
 
     func send(message: String) async throws {
         guard let url = URL(string: "\(baseURL)/\(topic)") else { return }
+        let senderName = AppIdentity.current?.displayName ?? "Someone"
+        let title = "Boop from \(senderName) 💛"
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
-        req.setValue("Boop! 💛", forHTTPHeaderField: "X-Title")
+        req.setValue(title, forHTTPHeaderField: "X-Title")
         req.setValue("high", forHTTPHeaderField: "X-Priority")
         req.setValue("boop,\(deviceTag)", forHTTPHeaderField: "X-Tags")
         req.httpBody = message.data(using: .utf8)
@@ -44,7 +46,7 @@ final class BoopService: @unchecked Sendable {
             throw BoopError.sendFailed
         }
         // APNs push for instant delivery (ntfy above is the fallback for polling)
-        await StatusService.shared.sendPush(title: "Boop! 💛", body: message)
+        await StatusService.shared.sendPush(title: title, body: message)
     }
 
     // MARK: - Receive (foreground polling)
@@ -79,8 +81,10 @@ final class BoopService: @unchecked Sendable {
             if (event.tags ?? []).contains(deviceTag) { continue }
 
             let currentBadge = await UIApplication.shared.applicationIconBadgeNumber
+            let rawTitle = event.title ?? ""
+            let title = rawTitle.isEmpty ? "Boop 💛" : rawTitle
             let content = UNMutableNotificationContent()
-            content.title = "Boop! 💛"
+            content.title = title
             content.body = event.message
             content.sound = .default
             content.badge = NSNumber(value: currentBadge + 1)
@@ -95,7 +99,7 @@ final class BoopService: @unchecked Sendable {
             NotificationInboxService.shared.append(
                 id: inboxID,
                 type: .boop,
-                title: "Boop! 💛",
+                title: title,
                 subtitle: event.message
             )
         }

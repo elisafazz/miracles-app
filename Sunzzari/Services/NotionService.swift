@@ -860,11 +860,10 @@ final class NotionService: @unchecked Sendable {
         if let d = iso.date(from: dateStr) { return d }
         iso.formatOptions = [.withInternetDateTime]
         if let d = iso.date(from: dateStr) { return d }
-        // Date-only fallback ("yyyy-MM-dd"). Pin UTC for consistency with dateProp writes.
+        // Date-only fallback ("yyyy-MM-dd"). Use device local timezone so calendar
+        // component extraction (month, day) in applyEntries/isYearOnly stays consistent.
         let fmtDate = DateFormatter()
         fmtDate.dateFormat = "yyyy-MM-dd"
-        fmtDate.timeZone = TimeZone(identifier: "UTC")
-        fmtDate.locale = Locale(identifier: "en_US_POSIX")
         return fmtDate.date(from: dateStr)
     }
 

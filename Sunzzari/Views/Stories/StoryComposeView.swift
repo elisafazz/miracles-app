@@ -2,48 +2,39 @@ import SwiftUI
 import PhotosUI
 import UIKit
 import AVFoundation
+import Combine
 
-/// Compose sheet for a new story. Three failed iterations on the prior IG-style
-/// overlay-on-photo + 9:16 canvas layout produced an unfixable horizontal-shift
-/// bug on iOS 26.x where the form rows were clipped on the leading edge even
-/// without the keyboard up. Root cause: the `.overlay { overlayLayer }` on the
-/// photo, where the location text inside used `.offset(y: -218)` to position
-/// itself above center, was leaking layout into the surrounding ScrollView.
-/// This rewrite strips the overlay-on-photo + bake function entirely. Caption
-/// is passed to Notion as a real string and the player renders it at playback
-/// (StoryPlayerView caption overlay restored). No more drag/pinch positioning;
-/// caption appears at a fixed position over the photo at playback time.
+/// Instagram-style story compose. Opens directly into an embedded camera
+/// (fullscreen live preview + shutter + library thumbnail + flip). After a
+/// photo is captured or picked, the photo fills the screen and tapping it
+/// opens an inline caption editor. The caption renders as a draggable pill
+/// and is baked into the upload at post time.
 struct StoryComposeView: View {
     @Environment(\.dismiss) private var dismiss
     let onPosted: (StoryPost) -> Void
 
     @State private var pickerItem: PhotosPickerItem?
     @State private var image: UIImage?
+    @State private var imageFromCamera = false
     @State private var caption: String = ""
-    @State private var location: String = ""
     @State private var isPosting = false
     @State private var errorMessage: String?
-    @State private var showSourceChoice = false
-    @State private var showCamera = false
     @State private var showLibrary = false
-    @State private var didAutoLaunchCamera = false
 
+    // Caching the publicID lets a retry skip a second Cloudinary upload if
+    // the first succeeded but Notion createStoryPost failed.
     @State private var lastUploadedPublicID: String?
 
-    @FocusState private var isInputFocused: Bool
-
-    // Caption preview overlay placement. Starts at .bottomLeading (offset 0,0
-    // = anchor position) and the user can drag it to reposition. Drag is
-    // CLAMPED to safe bounds so the rendered text never extends outside the
-    // photo's frame -- that off-bounds rendering caused the iOS 26 horizontal-
-    // shift bug in a prior commit (location overlay started at y: -218).
+    // Caption editor state. Drag offsets clamped on release so the pill
+    // can't escape the visible photo area.
+    @State private var isEditingCaption = false
     @State private var captionOffset: CGSize = .zero
     @State private var captionDragInProgress: CGSize = .zero
 
-    private static let photoHeight: CGFloat = 480
+    @FocusState private var captionFocused: Bool
 
-    private static let captionDragMaxX: CGFloat = 100
-    private static let captionDragMaxY: CGFloat = 400
+    private static let captionDragMaxX: CGFloat = 120
+    private static let captionDragMaxY: CGFloat = 280
 
     private var currentPerson: StoryPost.Person {
         switch AppIdentity.current {
@@ -54,218 +45,233 @@ struct StoryComposeView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.miraclesBackground.ignoresSafeArea()
+        ZStack {
+            Color.black.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        photoArea
-                        if image != nil {
-                            captionField
-                            locationField
-                        }
-                        if let errorMessage {
-                            Text(errorMessage)
-                                .font(.system(.caption, design: .serif))
-                                .foregroundStyle(.red)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
-                    .padding(20)
-                }
-                .scrollDismissesKeyboard(.interactively)
+            if let image {
+                composeStage(image: image)
+            } else {
+                CameraCaptureView(
+                    onCapture: { captured in
+                        self.image = captured
+                        self.imageFromCamera = true
+                        self.errorMessage = nil
+                    },
+                    onPickFromLibrary: { showLibrary = true },
+                    onClose: { dismiss() }
+                )
             }
-            .navigationTitle("New Story")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.miraclesSurface, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("New Story")
-                        .font(.system(size: 17, weight: .semibold, design: .serif))
-                        .foregroundStyle(Color.miraclesText)
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.miraclesSecondary)
-                        .disabled(isPosting)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isPosting {
-                        ProgressView().tint(.miraclesAccent)
-                    } else {
-                        Button("Post") { Task { await post() } }
-                            .foregroundStyle(image == nil ? Color.miraclesSecondary : Color.miraclesAccent)
-                            .fontWeight(.semibold)
-                            .disabled(image == nil)
-                    }
-                }
-                ToolbarItemGroup(placement: .keyboard) {
+
+            if let errorMessage {
+                VStack {
                     Spacer()
-                    Button("Done") { isInputFocused = false }
-                        .foregroundStyle(Color.miraclesAccent)
+                    Text(errorMessage)
+                        .font(.system(.footnote, design: .serif))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.red.opacity(0.85), in: Capsule())
+                        .padding(.bottom, 120)
                 }
+                .transition(.opacity)
             }
-            .task { await maybeAutoLaunchCamera() }
+        }
+        .photosPicker(isPresented: $showLibrary, selection: $pickerItem, matching: .images)
+        .onChange(of: pickerItem) { _, newItem in
+            Task { await loadPicked(newItem) }
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Compose (post-photo)
 
-    private var photoArea: some View {
-        ZStack {
-            if let image {
+    private func composeStage(image: UIImage) -> some View {
+        GeometryReader { geo in
+            ZStack {
                 Image(uiImage: image)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Self.photoHeight)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(alignment: .bottomLeading) { captionPreviewOverlay }
-                    .overlay(alignment: .topTrailing) {
-                        Button {
-                            self.image = nil
-                            self.pickerItem = nil
-                            self.captionOffset = .zero
-                            self.captionDragInProgress = .zero
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 24, design: .serif))
-                                .foregroundStyle(Color.miraclesBackground)
-                                .background(Color.black.opacity(0.4))
-                                .clipShape(Circle())
-                        }
-                        .padding(10)
-                    }
-            } else {
-                Button {
-                    showSourceChoice = true
-                } label: {
-                    VStack(spacing: 14) {
-                        Image(systemName: "photo.badge.plus")
-                            .font(.system(size: 56, design: .serif))
-                            .foregroundStyle(Color.miraclesAccent)
-                        Text("Add a photo")
-                            .font(.system(.headline, design: .serif))
-                            .foregroundStyle(Color.miraclesText)
-                        Text("Posting as \(currentPerson.displayName)")
-                            .font(.system(.caption, design: .serif))
-                            .foregroundStyle(Color.miraclesSecondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Self.photoHeight)
-                    .background(Color.miraclesSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-                .confirmationDialog("Add a photo", isPresented: $showSourceChoice, titleVisibility: .hidden) {
-                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                        Button("Take Photo") { showCamera = true }
-                    }
-                    Button("Choose from Library") { showLibrary = true }
-                    Button("Cancel", role: .cancel) {}
-                }
-                .photosPicker(isPresented: $showLibrary, selection: $pickerItem, matching: .images)
-                .onChange(of: pickerItem) { _, newItem in
-                    Task { await loadPicked(newItem) }
-                }
-                .fullScreenCover(isPresented: $showCamera) {
-                    CameraPicker { captured in
-                        if let captured {
-                            self.image = captured
-                            self.errorMessage = nil
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .blur(radius: 32)
+                    .overlay(Color.black.opacity(0.15))
+
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: imageFromCamera ? .fill : .fit)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if !isEditingCaption {
+                            isEditingCaption = true
+                            captionFocused = true
                         }
                     }
-                    .ignoresSafeArea()
+
+                if isEditingCaption {
+                    captionEditor
+                } else if !caption.isEmpty {
+                    captionPill
+                } else {
+                    captionHint
+                }
+
+                topBar
+                bottomBar
+            }
+            .ignoresSafeArea()
+        }
+        .ignoresSafeArea()
+    }
+
+    private var topBar: some View {
+        VStack {
+            HStack {
+                if !isEditingCaption {
+                    Button {
+                        // Discard the captured image, return to embedded camera.
+                        self.image = nil
+                        self.imageFromCamera = false
+                        self.caption = ""
+                        self.captionOffset = .zero
+                        self.captionDragInProgress = .zero
+                        self.pickerItem = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(10)
+                            .background(.ultraThinMaterial, in: Circle())
+                    }
+                }
+
+                Spacer()
+
+                if isEditingCaption {
+                    Button {
+                        captionFocused = false
+                        isEditingCaption = false
+                    } label: {
+                        Text("Done")
+                            .font(.system(.subheadline, design: .serif, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 8)
+                            .background(Color.miraclesAccent, in: Capsule())
+                    }
+                } else if isPosting {
+                    ProgressView().tint(.white)
+                } else {
+                    Button {
+                        Task { await post() }
+                    } label: {
+                        Text("Post")
+                            .font(.system(.subheadline, design: .serif, weight: .semibold))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 8)
+                            .background(Color.miraclesAccent, in: Capsule())
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            Spacer()
         }
     }
 
-    private var captionField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Caption", systemImage: "text.bubble")
-                .font(.system(size: 12, weight: .medium, design: .serif))
-                .foregroundStyle(Color.miraclesSecondary)
-            TextField("Say something...", text: $caption, axis: .vertical)
-                .lineLimit(1...4)
-                .padding(12)
-                .background(Color.miraclesSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .foregroundStyle(Color.miraclesText)
-                .focused($isInputFocused)
+    private var bottomBar: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                if !isEditingCaption {
+                    Button {
+                        isEditingCaption = true
+                        captionFocused = true
+                    } label: {
+                        Text("Aa")
+                            .font(.system(.headline, design: .serif, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 44, height: 44)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(.white.opacity(0.3), lineWidth: 0.5))
+                    }
+                }
+                Spacer()
+            }
+            .padding(.bottom, 32)
         }
     }
 
-    private var locationField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Where (optional)", systemImage: "mappin.and.ellipse")
-                .font(.system(size: 12, weight: .medium, design: .serif))
-                .foregroundStyle(Color.miraclesSecondary)
-            TextField("Santa Monica", text: $location)
-                .padding(12)
-                .background(Color.miraclesSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .foregroundStyle(Color.miraclesText)
-                .focused($isInputFocused)
+    private var captionHint: some View {
+        VStack(spacing: 6) {
+            Text("Aa")
+                .font(.system(.title, design: .serif, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.85))
+            Text("Tap to add a caption")
+                .font(.system(.footnote, design: .serif))
+                .foregroundStyle(.white.opacity(0.7))
         }
+        .shadow(color: .black.opacity(0.5), radius: 4)
+        .allowsHitTesting(false)
     }
 
-    /// Live caption preview rendered on the photo. Anchored bottom-leading so
-    /// the initial position is inside the photo's frame. User can drag to
-    /// reposition; offset is clamped on drag end so text never escapes the
-    /// photo's bounds.
-    @ViewBuilder
-    private var captionPreviewOverlay: some View {
-        if !caption.isEmpty {
-            Text(caption)
-                .font(.system(.body, design: .serif, weight: .medium))
+    private var captionPill: some View {
+        Text(caption)
+            .font(.system(.title3, design: .serif, weight: .semibold))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
+            .background(Color.black.opacity(0.45), in: Capsule())
+            .offset(
+                x: captionOffset.width + captionDragInProgress.width,
+                y: captionOffset.height + captionDragInProgress.height
+            )
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        captionDragInProgress = value.translation
+                    }
+                    .onEnded { value in
+                        let newX = captionOffset.width + value.translation.width
+                        let newY = captionOffset.height + value.translation.height
+                        captionOffset.width = max(-Self.captionDragMaxX, min(Self.captionDragMaxX, newX))
+                        captionOffset.height = max(-Self.captionDragMaxY, min(Self.captionDragMaxY, newY))
+                        captionDragInProgress = .zero
+                    }
+            )
+            .onTapGesture {
+                isEditingCaption = true
+                captionFocused = true
+            }
+    }
+
+    private var captionEditor: some View {
+        VStack {
+            Spacer().frame(height: 0)
+            TextField("", text: $caption, axis: .vertical)
+                .focused($captionFocused)
+                .font(.system(.title3, design: .serif, weight: .semibold))
                 .foregroundStyle(.white)
+                .tint(Color.miraclesAccent)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.black.opacity(0.45))
-                .clipShape(Capsule())
-                .padding(16)
-                .offset(
-                    x: captionOffset.width + captionDragInProgress.width,
-                    y: captionOffset.height + captionDragInProgress.height
-                )
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            captionDragInProgress = value.translation
-                        }
-                        .onEnded { value in
-                            let newX = captionOffset.width + value.translation.width
-                            let newY = captionOffset.height + value.translation.height
-                            captionOffset.width = max(-Self.captionDragMaxX, min(Self.captionDragMaxX, newX))
-                            captionOffset.height = max(-Self.captionDragMaxY, min(0, newY))
-                            captionDragInProgress = .zero
-                        }
-                )
+                .lineLimit(1...4)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(Color.black.opacity(0.55), in: Capsule())
+                .padding(.horizontal, 32)
+                .onSubmit {
+                    captionFocused = false
+                    isEditingCaption = false
+                }
+            Spacer()
         }
+        .padding(.top, 140)
     }
 
     // MARK: - Actions
-
-    private func maybeAutoLaunchCamera() async {
-        guard !didAutoLaunchCamera,
-              image == nil,
-              UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
-        didAutoLaunchCamera = true
-
-        switch AVCaptureDevice.authorizationStatus(for: .video) {
-        case .authorized:
-            showCamera = true
-        case .notDetermined:
-            let granted = await AVCaptureDevice.requestAccess(for: .video)
-            if granted { showCamera = true }
-        case .denied, .restricted:
-            break
-        @unknown default:
-            break
-        }
-    }
 
     private func loadPicked(_ item: PhotosPickerItem?) async {
         guard let item else { return }
@@ -301,10 +307,6 @@ struct StoryComposeView: View {
         defer { isPosting = false }
 
         do {
-            // Bake caption at user's dragged position into the upload image.
-            // Pass empty caption to Notion so player overlay does not double-
-            // render. If caption is empty, bake is a no-op and we upload the
-            // original.
             let imageToUpload = bakeCaptionIntoImage() ?? originalImage
 
             let publicID: String
@@ -315,25 +317,17 @@ struct StoryComposeView: View {
                 lastUploadedPublicID = publicID
             }
 
-            let trimmedLocation = location.trimmingCharacters(in: .whitespacesAndNewlines)
             let trimmedCaption = caption.trimmingCharacters(in: .whitespacesAndNewlines)
             let post = try await NotionService.shared.createStoryPost(
                 publicID: publicID,
                 caption: "",
                 person: currentPerson,
                 postedAt: Date(),
-                location: trimmedLocation.isEmpty ? nil : trimmedLocation
+                location: nil
             )
             lastUploadedPublicID = nil
 
-            let pushBody: String
-            if !trimmedCaption.isEmpty {
-                pushBody = trimmedCaption
-            } else if !trimmedLocation.isEmpty {
-                pushBody = trimmedLocation
-            } else {
-                pushBody = "Tap to watch"
-            }
+            let pushBody = trimmedCaption.isEmpty ? "Tap to watch" : trimmedCaption
             await StatusService.shared.sendPush(
                 title: "\(currentPerson.displayName) posted a story",
                 body: pushBody
@@ -346,37 +340,39 @@ struct StoryComposeView: View {
         }
     }
 
-    /// Render the photo + caption preview at the user's dragged position into
-    /// a single UIImage at upload time. Returns nil if caption is empty (the
-    /// caller uploads the original image instead).
     @MainActor
     private func bakeCaptionIntoImage() -> UIImage? {
         guard let originalImage = image else { return nil }
         let trimmed = caption.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        let displayWidth = UIScreen.main.bounds.width - 40
-        let displayHeight = Self.photoHeight
+        let screen = UIScreen.main.bounds.size
 
-        let composed = ZStack(alignment: .bottomLeading) {
+        let composed = ZStack {
             Image(uiImage: originalImage)
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: displayWidth, height: displayHeight)
+                .scaledToFill()
+                .frame(width: screen.width, height: screen.height)
+                .clipped()
+                .blur(radius: 32)
+                .overlay(Color.black.opacity(0.15))
+
+            Image(uiImage: originalImage)
+                .resizable()
+                .aspectRatio(contentMode: imageFromCamera ? .fill : .fit)
+                .frame(width: screen.width, height: screen.height)
                 .clipped()
 
             Text(caption)
-                .font(.system(.body, design: .serif, weight: .medium))
+                .font(.system(.title3, design: .serif, weight: .semibold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.black.opacity(0.45))
-                .clipShape(Capsule())
-                .padding(16)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(Color.black.opacity(0.45), in: Capsule())
                 .offset(x: captionOffset.width, y: captionOffset.height)
         }
-        .frame(width: displayWidth, height: displayHeight)
+        .frame(width: screen.width, height: screen.height)
 
         let renderer = ImageRenderer(content: composed)
         renderer.scale = 3
@@ -384,34 +380,362 @@ struct StoryComposeView: View {
     }
 }
 
-private struct CameraPicker: UIViewControllerRepresentable {
-    let onCaptured: (UIImage?) -> Void
-    @Environment(\.dismiss) private var dismiss
+// MARK: - Embedded camera
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.allowsEditing = false
-        picker.delegate = context.coordinator
-        return picker
+/// Instagram-style in-app camera. Renders a fullscreen AVCaptureSession live
+/// preview with a shutter button, library thumbnail, flip-camera button,
+/// and close (X). Handles video permission and gracefully falls back to the
+/// library-only UI when access is denied or the device has no camera.
+struct CameraCaptureView: View {
+    let onCapture: (UIImage) -> Void
+    let onPickFromLibrary: () -> Void
+    let onClose: () -> Void
+
+    @StateObject private var model = CameraCaptureModel()
+
+    // Pinch-zoom state. `baseZoom` is the device's videoZoomFactor at the
+    // start of the gesture; MagnificationGesture multiplies it on .onChanged
+    // and we commit back to base on .onEnded.
+    @State private var baseZoom: CGFloat = 1.0
+    @State private var currentZoom: CGFloat = 1.0
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            if model.permissionGranted {
+                CameraPreviewLayer(session: model.session)
+                    .ignoresSafeArea()
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                let target = baseZoom * value
+                                currentZoom = model.setZoom(target)
+                            }
+                            .onEnded { _ in
+                                baseZoom = currentZoom
+                            }
+                    )
+
+                if currentZoom > 1.05 {
+                    Text(String(format: "%.1fx", currentZoom))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(.ultraThinMaterial, in: Capsule())
+                        .padding(.bottom, 130)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .allowsHitTesting(false)
+                }
+            } else if model.permissionDenied {
+                permissionDeniedView
+            }
+
+            VStack {
+                topRow
+                Spacer()
+                bottomRow
+            }
+        }
+        .task { await model.setup() }
+        .onDisappear { model.teardown() }
+        .onChange(of: model.capturedImage) { _, newValue in
+            if let img = newValue {
+                // Crop to the screen aspect so what was visible in the preview
+                // is exactly what shows up in compose — AVCaptureSession ships
+                // the full 4:3 sensor, but the preview was .resizeAspectFill,
+                // so the user only ever saw the cropped portion.
+                let cropped = img.croppedToAspectRatio(of: UIScreen.main.bounds.size)
+                onCapture(cropped)
+                model.capturedImage = nil
+            }
+        }
     }
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: CameraPicker
-        init(_ parent: CameraPicker) { self.parent = parent }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            parent.onCaptured(info[.originalImage] as? UIImage)
-            parent.dismiss()
+    private var topRow: some View {
+        HStack {
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(10)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            Spacer()
+            if model.permissionGranted {
+                Button {
+                    model.flipCamera()
+                } label: {
+                    Image(systemName: "arrow.triangle.2.circlepath.camera")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: Circle())
+                }
+                .accessibilityLabel("Flip camera")
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
 
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.onCaptured(nil)
-            parent.dismiss()
+    private var bottomRow: some View {
+        HStack {
+            // Library thumbnail (left)
+            Button(action: onPickFromLibrary) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.ultraThinMaterial)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "photo.on.rectangle")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(.white.opacity(0.3), lineWidth: 0.5))
+            }
+            .accessibilityLabel("Choose from library")
+
+            Spacer()
+
+            // Shutter (center)
+            if model.permissionGranted {
+                Button {
+                    model.capture()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white, lineWidth: 4)
+                            .frame(width: 76, height: 76)
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 62, height: 62)
+                    }
+                }
+                .accessibilityLabel("Take photo")
+            } else {
+                Spacer().frame(width: 76, height: 76)
+            }
+
+            Spacer()
+
+            // Symmetry placeholder (right) — keeps the shutter visually centered.
+            Color.clear.frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 36)
+    }
+
+    private var permissionDeniedView: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "camera.fill")
+                .font(.system(size: 44, design: .serif))
+                .foregroundStyle(.white.opacity(0.7))
+            Text("Camera access needed")
+                .font(.system(.headline, design: .serif))
+                .foregroundStyle(.white)
+            Text("Enable Camera in Settings to take a photo, or pick one from your library.")
+                .font(.system(.footnote, design: .serif))
+                .foregroundStyle(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color.miraclesAccent)
+            .padding(.top, 4)
+        }
+    }
+}
+
+/// AVCaptureSession-backed model. Session work happens on a private serial
+/// queue (per Apple's guidance); only `@Published` writes are dispatched
+/// back to MainActor.
+@MainActor
+final class CameraCaptureModel: NSObject, ObservableObject {
+    let session = AVCaptureSession()
+    @Published var permissionGranted = false
+    @Published var permissionDenied = false
+    @Published var capturedImage: UIImage?
+
+    private let sessionQueue = DispatchQueue(label: "miracles.camera.session")
+    private let photoOutput = AVCapturePhotoOutput()
+    private var videoInput: AVCaptureDeviceInput?
+    private var position: AVCaptureDevice.Position = .back
+
+    func setup() async {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            permissionGranted = true
+            configureSession()
+        case .notDetermined:
+            let granted = await AVCaptureDevice.requestAccess(for: .video)
+            permissionGranted = granted
+            permissionDenied = !granted
+            if granted { configureSession() }
+        case .denied, .restricted:
+            permissionDenied = true
+        @unknown default:
+            permissionDenied = true
+        }
+    }
+
+    func teardown() {
+        sessionQueue.async { [session] in
+            if session.isRunning { session.stopRunning() }
+        }
+    }
+
+    func capture() {
+        let settings = AVCapturePhotoSettings()
+        settings.flashMode = .off
+        sessionQueue.async { [photoOutput, weak self] in
+            guard let self else { return }
+            photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    /// Apply a pinch-driven zoom factor to the active camera device. Returns
+    /// the clamped value so the UI can show "1.5x" etc. without recomputing
+    /// the device's max zoom on every drag tick.
+    @discardableResult
+    func setZoom(_ factor: CGFloat) -> CGFloat {
+        guard let device = videoInput?.device else { return 1.0 }
+        let maxFactor = min(device.activeFormat.videoMaxZoomFactor, 10.0)
+        let clamped = max(1.0, min(maxFactor, factor))
+        do {
+            try device.lockForConfiguration()
+            device.videoZoomFactor = clamped
+            device.unlockForConfiguration()
+        } catch {
+            return device.videoZoomFactor
+        }
+        return clamped
+    }
+
+    func flipCamera() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.session.beginConfiguration()
+            defer { self.session.commitConfiguration() }
+            if let current = self.videoInput {
+                self.session.removeInput(current)
+            }
+            let newPosition: AVCaptureDevice.Position = (self.position == .back) ? .front : .back
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
+                  let input = try? AVCaptureDeviceInput(device: device),
+                  self.session.canAddInput(input) else {
+                // Revert: re-add previous input if available
+                if let prev = self.videoInput, self.session.canAddInput(prev) {
+                    self.session.addInput(prev)
+                }
+                return
+            }
+            self.session.addInput(input)
+            self.videoInput = input
+            self.position = newPosition
+        }
+    }
+
+    private func configureSession() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            self.session.beginConfiguration()
+            self.session.sessionPreset = .photo
+
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: self.position),
+                  let input = try? AVCaptureDeviceInput(device: device),
+                  self.session.canAddInput(input) else {
+                self.session.commitConfiguration()
+                return
+            }
+            self.session.addInput(input)
+            self.videoInput = input
+
+            if self.session.canAddOutput(self.photoOutput) {
+                self.session.addOutput(self.photoOutput)
+            }
+            self.session.commitConfiguration()
+            self.session.startRunning()
+        }
+    }
+}
+
+extension CameraCaptureModel: AVCapturePhotoCaptureDelegate {
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        guard error == nil,
+              let data = photo.fileDataRepresentation(),
+              let image = UIImage(data: data) else { return }
+        let oriented = image.normalized()
+        Task { @MainActor in
+            self.capturedImage = oriented
+        }
+    }
+}
+
+/// UIView wrapper around AVCaptureVideoPreviewLayer. SwiftUI doesn't expose
+/// the layer-backed preview directly, so we drop down to UIKit.
+struct CameraPreviewLayer: UIViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeUIView(context: Context) -> PreviewUIView {
+        let view = PreviewUIView()
+        view.videoPreviewLayer.session = session
+        view.videoPreviewLayer.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateUIView(_ uiView: PreviewUIView, context: Context) {}
+
+    final class PreviewUIView: UIView {
+        override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+        var videoPreviewLayer: AVCaptureVideoPreviewLayer {
+            // swiftlint:disable:next force_cast
+            layer as! AVCaptureVideoPreviewLayer
+        }
+    }
+}
+
+extension UIImage {
+    /// Center-crop the image to match the aspect ratio of `target`. The
+    /// AVCaptureSession ships a full 4:3 sensor frame but the preview uses
+    /// `.resizeAspectFill`, so the user only ever saw the screen-shaped
+    /// crop. Re-cropping to screen aspect here makes the captured photo
+    /// match what was in the viewfinder.
+    func croppedToAspectRatio(of target: CGSize) -> UIImage {
+        guard let cg = cgImage, target.width > 0, target.height > 0 else { return self }
+        let pixelWidth = CGFloat(cg.width)
+        let pixelHeight = CGFloat(cg.height)
+        let targetAR = target.width / target.height
+        let imageAR = pixelWidth / pixelHeight
+        let cropPixelRect: CGRect
+        if imageAR > targetAR {
+            let newWidth = pixelHeight * targetAR
+            let x = (pixelWidth - newWidth) / 2
+            cropPixelRect = CGRect(x: x, y: 0, width: newWidth, height: pixelHeight)
+        } else {
+            let newHeight = pixelWidth / targetAR
+            let y = (pixelHeight - newHeight) / 2
+            cropPixelRect = CGRect(x: 0, y: y, width: pixelWidth, height: newHeight)
+        }
+        guard let cropped = cg.cropping(to: cropPixelRect) else { return self }
+        return UIImage(cgImage: cropped, scale: scale, orientation: .up)
+    }
+}
+
+private extension UIImage {
+    /// Re-render with `.up` orientation baked into pixels so downstream code
+    /// (Cloudinary, ImageRenderer) doesn't have to track EXIF orientation.
+    func normalized() -> UIImage {
+        if imageOrientation == .up { return self }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        return renderer.image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
         }
     }
 }

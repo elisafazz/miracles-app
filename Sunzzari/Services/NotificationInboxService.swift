@@ -17,8 +17,9 @@ struct InboxEntry: Identifiable, Codable, Equatable {
 }
 
 extension Notification.Name {
-    static let inboxDidChange = Notification.Name("miracles.inboxDidChange")
-    static let openInbox      = Notification.Name("miracles.openInbox")
+    static let inboxDidChange     = Notification.Name("miracles.inboxDidChange")
+    static let openInbox          = Notification.Name("miracles.openInbox")
+    static let storiesDidMarkSeen = Notification.Name("miracles.storiesDidMarkSeen")
 }
 
 final class NotificationInboxService: @unchecked Sendable {
@@ -110,5 +111,38 @@ final class NotificationInboxService: @unchecked Sendable {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .inboxDidChange, object: nil)
         }
+    }
+}
+
+/// Tracks which story IDs the local user has already watched. Used by the
+/// inbox sync so "X posted N stories" reflects UNSEEN stories — total
+/// daily count was misleading once you'd watched some of them. Stored in
+/// UserDefaults as a string array; small footprint (story IDs are short and
+/// stories age out after 24h, so this set stays bounded).
+final class SeenStoriesStore: @unchecked Sendable {
+    static let shared = SeenStoriesStore()
+
+    private let key = "miracles_seen_story_ids"
+    private let queue = DispatchQueue(label: "miracles.seenstories")
+    private var ids: Set<String>
+
+    private init() {
+        ids = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    }
+
+    func isSeen(_ id: String) -> Bool {
+        queue.sync { ids.contains(id) }
+    }
+
+    func markSeen(_ id: String) {
+        queue.sync {
+            guard !ids.contains(id) else { return }
+            ids.insert(id)
+            UserDefaults.standard.set(Array(ids), forKey: key)
+        }
+    }
+
+    func unseenCount(in stories: [StoryPost]) -> Int {
+        queue.sync { stories.filter { !ids.contains($0.id) }.count }
     }
 }

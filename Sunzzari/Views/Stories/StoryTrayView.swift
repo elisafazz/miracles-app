@@ -62,14 +62,12 @@ struct StoryTrayView: View {
                 replayOverlay
             }
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container) // container only — lets keyboard inset propagate to StoryPlayerView
         .background(Color.black)
         .statusBarHidden(true)
     }
 
     private var replayOverlay: some View {
-        // Keep the last frame fully visible behind the controls — no full-screen
-        // dim. A small glass-blur Replay button sits center, Close sits below.
         VStack(spacing: 14) {
             Button(action: replay) {
                 HStack(spacing: 8) {

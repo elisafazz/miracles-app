@@ -42,7 +42,6 @@ struct TodayView: View {
                 VStack(spacing: 0) {
                     PageHeader(headerDateString) {
                         HStack(spacing: 8) {
-                            StoryHeaderButton()
                             InboxBellButton()
                             Button {
                                 showCustomBoop = true

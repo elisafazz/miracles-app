@@ -31,10 +31,10 @@ final class BoopService: @unchecked Sendable {
 
     // MARK: - Send
 
-    func send(message: String) async throws {
+    func send(message: String, notificationTitle: String? = nil) async throws {
         guard let url = URL(string: "\(baseURL)/\(topic)") else { return }
         let senderName = AppIdentity.current?.displayName ?? "Someone"
-        let title = "Boop from \(senderName) 💛"
+        let title = notificationTitle ?? "Boop from \(senderName) 💛"
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue(title, forHTTPHeaderField: "X-Title")

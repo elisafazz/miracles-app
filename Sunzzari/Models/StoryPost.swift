@@ -7,6 +7,35 @@ struct StoryPost: Identifiable, Codable, Hashable {
     var person: Person
     var postedAt: Date
     var location: String?
+    var reactions: [Reaction]
+
+    struct Reaction: Identifiable, Codable, Hashable {
+        let person: Person
+        let emoji: String
+        var id: String { person.rawValue }
+    }
+
+    init(id: String, publicID: String, caption: String, person: Person,
+         postedAt: Date, location: String?, reactions: [Reaction] = []) {
+        self.id = id; self.publicID = publicID; self.caption = caption
+        self.person = person; self.postedAt = postedAt; self.location = location
+        self.reactions = reactions
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, publicID, caption, person, postedAt, location, reactions
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id       = try c.decode(String.self,  forKey: .id)
+        publicID = try c.decode(String.self,  forKey: .publicID)
+        caption  = try c.decode(String.self,  forKey: .caption)
+        person   = try c.decode(Person.self,  forKey: .person)
+        postedAt = try c.decode(Date.self,    forKey: .postedAt)
+        location = try c.decodeIfPresent(String.self,  forKey: .location)
+        reactions = (try? c.decodeIfPresent([Reaction].self, forKey: .reactions)) ?? []
+    }
 
     enum Person: String, CaseIterable, Codable {
         case elisa  = "Elisa"

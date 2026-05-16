@@ -546,17 +546,74 @@ final class NotionService: @unchecked Sendable {
                   let personRaw = extractSelect(from: props["Person"]),
                   let person = StoryPost.Person(rawValue: personRaw)
             else { return nil }
+            let reactionsText = extractRichText(from: props["Reactions"]) ?? ""
+            let reactions = parseReactions(reactionsText)
             return StoryPost(
                 id: id,
                 publicID: publicID,
                 caption: extractRichText(from: props["Caption"]) ?? "",
                 person: person,
                 postedAt: postedAt,
-                location: extractRichText(from: props["Location"])
+                location: extractRichText(from: props["Location"]),
+                reactions: reactions
             )
         }
         logSkipped("stories", total: results.count, parsed: posts.count)
         return posts
+    }
+
+    // Reactions format in Notion: "Elisa:❤️|Mom:🔥|Sister:😂"
+    private func parseReactions(_ text: String) -> [StoryPost.Reaction] {
+        guard !text.isEmpty else { return [] }
+        return text.components(separatedBy: "|").compactMap { part in
+            let kv = part.components(separatedBy: ":")
+            guard kv.count == 2,
+                  let person = StoryPost.Person(rawValue: kv[0]) else { return nil }
+            return StoryPost.Reaction(person: person, emoji: kv[1])
+        }
+    }
+
+    private func reactionsString(_ reactions: [StoryPost.Reaction]) -> String {
+        reactions.map { "\($0.person.rawValue):\($0.emoji)" }.joined(separator: "|")
+    }
+
+    private var reactionsPropertyEnsured = false
+
+    func addStoryReaction(storyID: String, person: StoryPost.Person, emoji: String) async throws {
+        // Ensure the "Reactions" column exists in the Stories DB (one-time, best-effort)
+        if !reactionsPropertyEnsured {
+            reactionsPropertyEnsured = true
+            if let url = URL(string: "\(baseURL)/databases/\(Constants.Notion.storiesDBID)") {
+                var req = URLRequest(url: url)
+                req.httpMethod = "PATCH"
+                req.timeoutInterval = 10
+                headers.forEach { req.setValue($1, forHTTPHeaderField: $0) }
+                let schemaBody: [String: Any] = ["properties": ["Reactions": ["rich_text": [:] as [String: Any]]]]
+                req.httpBody = try? JSONSerialization.data(withJSONObject: schemaBody)
+                _ = try? await URLSession.shared.data(for: req)
+            }
+        }
+
+        // Fetch current page to read existing reactions
+        guard let url = URL(string: "\(baseURL)/pages/\(storyID)") else { return }
+        var fetchReq = URLRequest(url: url)
+        fetchReq.timeoutInterval = 10
+        headers.forEach { fetchReq.setValue($1, forHTTPHeaderField: $0) }
+        let (fetchData, _) = try await URLSession.shared.data(for: fetchReq)
+        var existing: [StoryPost.Reaction] = []
+        if let json = try? JSONSerialization.jsonObject(with: fetchData) as? [String: Any],
+           let props = json["properties"] as? [String: Any],
+           let text = extractRichText(from: props["Reactions"]) {
+            existing = parseReactions(text)
+        }
+
+        // Upsert: replace if same person already reacted, otherwise append
+        var merged = existing.filter { $0.person != person }
+        merged.append(StoryPost.Reaction(person: person, emoji: emoji))
+
+        try await updatePage(id: storyID, body: [
+            "properties": ["Reactions": richTextProp(reactionsString(merged))]
+        ])
     }
 
     private func createPage(body: [String: Any]) async throws {

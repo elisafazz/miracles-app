@@ -4,6 +4,7 @@ struct AddRestaurantView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var beenThere = false
+    @State private var thinkingAbout = false
     @State private var preference: Restaurant.Preference? = nil
     @State private var location = ""
     @State private var neighborhood = ""
@@ -42,6 +43,18 @@ struct AddRestaurantView: View {
                                 .padding()
                                 .background(Color.miraclesSurface)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+
+                        // Shortlist flag. Mutually exclusive with Been There? —
+                        // once you've been, it stops being somewhere you want to try.
+                        if !beenThere {
+                            formField(label: "Want to try it", icon: "sparkles") {
+                                Toggle("", isOn: $thinkingAbout.animation())
+                                    .tint(.miraclesAccent)
+                                    .padding()
+                                    .background(Color.miraclesSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
                         }
 
                         if beenThere {
@@ -283,6 +296,7 @@ struct AddRestaurantView: View {
                 id:           UUID().uuidString,
                 name:         name,
                 beenThere:    beenThere,
+                thinkingAbout: beenThere ? false : thinkingAbout,
                 preference:   beenThere ? preference : nil,
                 location:     location,
                 neighborhood: neighborhood,

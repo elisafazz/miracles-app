@@ -1,5 +1,13 @@
 import Foundation
 import CoreLocation
+import os
+
+/// Thrown by patchPage on a non-2xx Notion response so callers can distinguish a
+/// real write failure from a transport error. Most callers `try?` this, but the
+/// failure is always logged (see patchPage) so a dead device-token write is visible.
+enum StatusServiceError: Error {
+    case notionHTTP(Int)
+}
 
 /// Infra service kept after the Status tab was replaced by Stories.
 /// Handles APNs token storage, push fan-out via Vercel backend, location ping,
@@ -8,6 +16,8 @@ import CoreLocation
 final class StatusService: @unchecked Sendable {
     static let shared = StatusService()
     private init() {}
+
+    fileprivate static let log = Logger(subsystem: "com.elisafazzari.miracles", category: "status-service")
 
     private let notionBase = "https://api.notion.com/v1"
     private let pendingTokenKey = "miracles_pending_apns_token"
@@ -171,9 +181,21 @@ final class StatusService: @unchecked Sendable {
         guard let url = URL(string: "\(notionBase)/pages/\(id)") else { return }
         var req = URLRequest(url: url)
         req.httpMethod = "PATCH"
+        req.timeoutInterval = 10
         notionHeaders.forEach { req.setValue($1, forHTTPHeaderField: $0) }
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        _ = try await URLSession.shared.data(for: req)
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse else { return }
+        guard (200...299).contains(http.statusCode) else {
+            // Fail loud: a 404 here almost always means the Notion integration grant is
+            // missing on this family member's page. Left silent, it disables that person's
+            // device-token write -> they never receive boops or story pushes, with no error
+            // visible anywhere. Log it so it is at least diagnosable from device Console.
+            let detail = String(data: data, encoding: .utf8) ?? ""
+            StatusService.log.error(
+                "Notion PATCH page \(id, privacy: .public) failed: HTTP \(http.statusCode, privacy: .public). If 404, grant the Miracles integration access to this page. \(detail, privacy: .public)")
+            throw StatusServiceError.notionHTTP(http.statusCode)
+        }
     }
 
     private func isoString(for date: Date) -> String {

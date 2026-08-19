@@ -18,6 +18,7 @@ final class NotionService: @unchecked Sendable {
     private var photosCache: (photos: [FamilyPhoto], at: Date)?
     private var memoriesCache: (memories: [Memory], at: Date)?
     private var restaurantsCache: (items: [Restaurant], at: Date)?
+    private var watchlistCache: (items: [WatchlistItem], at: Date)?
     private var winesCache: (items: [Wine], at: Date)?
     private var activitiesCache: (items: [Activity], at: Date)?
     private var thoughtsCache: (entries: [ThoughtEntry], at: Date)?
@@ -36,6 +37,7 @@ final class NotionService: @unchecked Sendable {
     func invalidateRestaurants() { restaurantsCache = nil }
     func invalidateWines() { winesCache = nil }
     func invalidateActivities() { activitiesCache = nil }
+    func invalidateWatchlist() { watchlistCache = nil }
     func invalidateThoughts() { thoughtsCache = nil }
     func invalidateStories() {
         storiesActiveCache = nil
@@ -71,6 +73,11 @@ final class NotionService: @unchecked Sendable {
 
     func memoriesDiskCache() -> [Memory]? {
         loadFromDisk(name: "memories").map { parseMemories(from: $0) }
+    }
+
+    func watchlistDiskCache() -> [WatchlistItem]? {
+        guard let data = loadFromDisk(name: "watchlist") else { return nil }
+        return parseWatchlist(from: data)
     }
 
     func restaurantsDiskCache() -> [Restaurant]? {
@@ -398,6 +405,90 @@ final class NotionService: @unchecked Sendable {
         try await createPage(body: activityPayload(a))
     }
 
+    // MARK: - Lists (movies + shows + recipes)
+
+    func fetchWatchlist(force: Bool = false) async throws -> [WatchlistItem] {
+        if !force, let cached = watchlistCache, Date().timeIntervalSince(cached.at) < cacheTTL {
+            return cached.items
+        }
+        do {
+            let data = try await queryDatabase(
+                id: Constants.Notion.listsDBID,
+                sorts: [["property": "Title", "direction": "ascending"]]
+            )
+            let items = parseWatchlist(from: data)
+            watchlistCache = (items, Date())
+            saveToDisk(data, name: "watchlist")
+            return items
+        } catch {
+            if let diskData = loadFromDisk(name: "watchlist") {
+                let items = parseWatchlist(from: diskData)
+                watchlistCache = (items, Date())
+                return items
+            }
+            throw error
+        }
+    }
+
+    /// Returns the item carrying its real Notion page ID so the new row can be
+    /// checked off without waiting for a refetch.
+    @discardableResult
+    func createWatchlistItem(title: String, kind: WatchlistItem.Kind, location: String? = nil) async throws -> WatchlistItem {
+        var props: [String: Any] = [
+            "Title":   titleProp(title),
+            "Type":    ["select": ["name": kind.rawValue]],
+            "Watched": ["checkbox": false]
+        ]
+        if let location, !location.isEmpty { props["Where"] = ["select": ["name": location]] }
+        let id = try await createPageReturningID(body: [
+            "parent": ["database_id": Constants.Notion.listsDBID],
+            "properties": props
+        ])
+        watchlistCache = nil
+        return WatchlistItem(id: id, title: title, kind: kind, watched: false, location: location)
+    }
+
+    /// Minimal add from the Home checklist: name only, flagged onto the shortlist.
+    func createRestaurantOnShortlist(name: String, neighborhood: String? = nil) async throws -> String {
+        var props: [String: Any] = [
+            "Name":           titleProp(name),
+            "Been There?":    ["checkbox": false],
+            "Thinking About": ["checkbox": true]
+        ]
+        if let neighborhood, !neighborhood.isEmpty { props["Neighborhood"] = richTextProp(neighborhood) }
+        let id = try await createPageReturningID(body: [
+            "parent": ["database_id": Constants.Notion.restaurantsDBID],
+            "properties": props
+        ])
+        restaurantsCache = nil
+        return id
+    }
+
+    /// `Thinking About` is a home-activity concept, so `Home?` is set alongside it.
+    func createActivityOnShortlist(name: String) async throws -> String {
+        let id = try await createPageReturningID(body: [
+            "parent": ["database_id": Constants.Notion.activitiesDBID],
+            "properties": [
+                "Name":           titleProp(name),
+                "Home?":          ["checkbox": true],
+                "Active?":        ["checkbox": true],
+                "Date-Specific?": ["checkbox": false],
+                "Done?":          ["checkbox": false],
+                "Thinking About": ["checkbox": true]
+            ]
+        ])
+        activitiesCache = nil
+        return id
+    }
+
+    /// Flips several checkboxes in ONE request. Checking a restaurant off has to set
+    /// `Been There?` and clear `Thinking About` together, or a failed second write
+    /// leaves the row half-updated.
+    func updatePageCheckboxes(pageID: String, values: [String: Bool]) async throws {
+        let props = values.mapValues { ["checkbox": $0] }
+        try await updatePage(id: pageID, body: ["properties": props])
+    }
+
     // MARK: - Private: API
 
     private func queryDatabase(id: String, sorts: [[String: Any]], filter: [String: Any]? = nil) async throws -> Data {
@@ -630,6 +721,26 @@ final class NotionService: @unchecked Sendable {
         }
     }
 
+    /// Same as `createPage` but hands back the new page's ID. A locally minted UUID
+    /// would 404 the first time the row is checked off.
+    private func createPageReturningID(body: [String: Any]) async throws -> String {
+        let url = URL(string: "\(baseURL)/pages")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw NotionError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let id = json["id"] as? String else {
+            throw NotionError.httpError(http.statusCode)
+        }
+        return id
+    }
+
     private func updatePage(id: String, body: [String: Any]) async throws {
         guard let url = URL(string: "\(baseURL)/pages/\(id)") else { throw NotionError.badURL }
         var request = URLRequest(url: url)
@@ -711,6 +822,23 @@ final class NotionService: @unchecked Sendable {
 
     // MARK: - Private: Parsers (Hub)
 
+    private func parseWatchlist(from data: Data) -> [WatchlistItem] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let results = json["results"] as? [[String: Any]] else { return [] }
+        return results.compactMap { page in
+            guard let id = page["id"] as? String,
+                  let props = page["properties"] as? [String: Any] else { return nil }
+            let kindStr = extractSelect(from: props["Type"]) ?? WatchlistItem.Kind.movie.rawValue
+            return WatchlistItem(
+                id:       id,
+                title:    extractTitle(from: props["Title"]) ?? "Untitled",
+                kind:     WatchlistItem.Kind(rawValue: kindStr) ?? .movie,
+                watched:  (props["Watched"] as? [String: Any])?["checkbox"] as? Bool ?? false,
+                location: extractSelect(from: props["Where"])
+            )
+        }
+    }
+
     private func parseRestaurants(from data: Data) -> [Restaurant] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let results = json["results"] as? [[String: Any]] else { return [] }
@@ -722,6 +850,7 @@ final class NotionService: @unchecked Sendable {
                 id:           id,
                 name:         extractTitle(from: props["Name"]) ?? "Untitled",
                 beenThere:    (props["Been There?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
+                thinkingAbout: (props["Thinking About"] as? [String: Any])?["checkbox"] as? Bool ?? false,
                 preference:   prefStr.flatMap { Restaurant.Preference(rawValue: $0) },
                 location:     extractSelect(from: props["Location"]) ?? "",
                 neighborhood: extractRichText(from: props["Neighborhood"]) ?? "",
@@ -774,7 +903,9 @@ final class NotionService: @unchecked Sendable {
                 active:         (props["Active?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
                 seasonal:       (props["Seasonal?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
                 home:           (props["Home?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
-                calendarSynced: (props["Calendar Synced?"] as? [String: Any])?["checkbox"] as? Bool ?? false
+                calendarSynced: (props["Calendar Synced?"] as? [String: Any])?["checkbox"] as? Bool ?? false,
+                thinkingAbout:  (props["Thinking About"] as? [String: Any])?["checkbox"] as? Bool ?? false,
+                done:           (props["Done?"] as? [String: Any])?["checkbox"] as? Bool ?? false
             )
         }
         logSkipped("parseActivities", total: results.count, parsed: parsed.count)
@@ -821,6 +952,7 @@ final class NotionService: @unchecked Sendable {
         var props: [String: Any] = [
             "Name":       titleProp(r.name),
             "Been There?": ["checkbox": r.beenThere],
+            "Thinking About": ["checkbox": r.thinkingAbout],
             "Good For":   ["multi_select": r.goodFor.map { ["name": $0] }],
             "Neighborhood": richTextProp(r.neighborhood),
             "Top Dishes": richTextProp(r.topDishes),
@@ -855,7 +987,9 @@ final class NotionService: @unchecked Sendable {
             "Seasonal?":       ["checkbox": a.seasonal],
             "Home?":           ["checkbox": a.home],
             "Date-Specific?":  ["checkbox": a.dateSpecific],
-            "Calendar Synced?": ["checkbox": a.calendarSynced]
+            "Calendar Synced?": ["checkbox": a.calendarSynced],
+            "Thinking About":  ["checkbox": a.thinkingAbout],
+            "Done?":           ["checkbox": a.done]
         ]
         if a.dateSpecific, let date = a.dateActive { props["Date Active"] = dateProp(date) }
         return ["parent": ["database_id": Constants.Notion.activitiesDBID], "properties": props]
@@ -874,9 +1008,12 @@ final class NotionService: @unchecked Sendable {
     private func dateProp(_ date: Date) -> [String: Any] {
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd"
-        // Pin to UTC so a "today" written at 11:30PM PDT does not round-trip as a different
-        // date when read back in another timezone. Notion treats date-only strings as UTC.
-        fmt.timeZone = TimeZone(identifier: "UTC")
+        // Format the calendar day the user actually picked, in their local timezone.
+        // The read side (extractDate's date-only fallback) parses in local time too, so
+        // write and read must agree. A UTC pin here shifted every evening entry forward a
+        // day (e.g. 6PM PDT July 10 -> "2026-07-11"), which threw off On This Day / Best Of
+        // anniversary matching and mislabeled Dec 31 entries as Jan 1 year-only.
+        fmt.timeZone = TimeZone.current
         fmt.locale = Locale(identifier: "en_US_POSIX")
         return ["date": ["start": fmt.string(from: date)]]
     }
@@ -918,9 +1055,13 @@ final class NotionService: @unchecked Sendable {
         iso.formatOptions = [.withInternetDateTime]
         if let d = iso.date(from: dateStr) { return d }
         // Date-only fallback ("yyyy-MM-dd"). Use device local timezone so calendar
-        // component extraction (month, day) in applyEntries/isYearOnly stays consistent.
+        // component extraction (month, day) in applyEntries/isYearOnly stays consistent,
+        // and a fixed POSIX locale so a device-level calendar/format override cannot fail
+        // the parse. Mirrors dateProp on the write side.
         let fmtDate = DateFormatter()
         fmtDate.dateFormat = "yyyy-MM-dd"
+        fmtDate.timeZone = TimeZone.current
+        fmtDate.locale = Locale(identifier: "en_US_POSIX")
         return fmtDate.date(from: dateStr)
     }
 

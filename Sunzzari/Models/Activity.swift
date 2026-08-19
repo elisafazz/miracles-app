@@ -10,4 +10,7 @@ struct Activity: Identifiable, Codable {
     var seasonal: Bool
     var home: Bool
     var calendarSynced: Bool
+    /// Shortlist flag driving the Home "activities to do" list.
+    var thinkingAbout: Bool
+    var done: Bool
 }

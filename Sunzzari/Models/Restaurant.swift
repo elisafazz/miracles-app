@@ -4,6 +4,8 @@ struct Restaurant: Identifiable, Codable {
     let id: String
     var name: String
     var beenThere: Bool
+    /// Shortlist flag driving the Home "restaurants to try" list.
+    var thinkingAbout: Bool
     var preference: Preference?
     var location: String
     var neighborhood: String

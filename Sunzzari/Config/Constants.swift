@@ -29,6 +29,7 @@ enum Constants {
         static let familyDBID       = "a6973030-4de0-49b5-99e0-ba73cb1bc056"
         static let thoughtsDBID     = "f30100fc-b330-4797-9625-82a0c9722c5a"
         static let storiesDBID      = "ce161464-4c0f-4cf6-9d73-5dc743364862"
+        static let listsDBID        = "3c1f3cdd-67a4-8162-b401-e7ff83a886ee"
         static let version          = "2022-06-28"
     }
 

@@ -7,6 +7,7 @@ struct AddActivityView: View {
     @State private var active = false
     @State private var seasonal = false
     @State private var home = false
+    @State private var thinkingAbout = false
     @State private var dateSpecific = false
     @State private var dateActive = Date()
     @State private var isSaving = false
@@ -53,6 +54,7 @@ struct AddActivityView: View {
                                     .foregroundStyle(Color.miraclesText)
 
                                 Toggle("Home?", isOn: $home)
+                                Toggle("Want to do it", isOn: $thinkingAbout)
                                     .tint(.miraclesAccent)
                                     .padding()
                                     .background(Color.miraclesSurface)
@@ -135,7 +137,9 @@ struct AddActivityView: View {
                 active:         active,
                 seasonal:       seasonal,
                 home:           home,
-                calendarSynced: false
+                calendarSynced: false,
+                thinkingAbout:  thinkingAbout,
+                done:           false
             )
             try await NotionService.shared.createActivity(a)
             UINotificationFeedbackGenerator().notificationOccurred(.success)

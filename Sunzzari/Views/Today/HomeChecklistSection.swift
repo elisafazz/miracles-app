@@ -6,6 +6,8 @@ import UIKit
 /// looks the same, with the common fixed values pinned to sensible colours.
 struct ChecklistChip: View {
     let text: String
+    /// Selected chips invert to a solid fill so the choice is unmistakable.
+    var selected: Bool = false
 
     private static let palette: [String] = [
         "#E8B86D", "#54A0FF", "#70C17C", "#A78BFA",
@@ -36,18 +38,18 @@ struct ChecklistChip: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 9, weight: .semibold, design: .serif))
+            .font(.system(size: selected ? 11 : 9, weight: .semibold, design: .serif))
             .tracking(0.3)
-            .foregroundStyle(Color(hex: colorHex))
+            .foregroundStyle(selected ? Color.miraclesBackground : Color(hex: colorHex))
             .lineLimit(1)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
+            .padding(.horizontal, selected ? 10 : 7)
+            .padding(.vertical, selected ? 5 : 3)
             .background(
-                Capsule().fill(Color(hex: colorHex).opacity(0.16))
+                Capsule().fill(Color(hex: colorHex).opacity(selected ? 1.0 : 0.16))
                     .overlay(Capsule().fill(Color.miraclesChipFill.opacity(0.35)))
             )
             .overlay(
-                Capsule().stroke(Color.miraclesChipStroke, lineWidth: 0.5)
+                Capsule().stroke(Color.miraclesChipStroke, lineWidth: selected ? 1 : 0.5)
             )
     }
 }
@@ -123,17 +125,18 @@ struct HomeChecklistHeader: View {
 /// movies and shows pick from a fixed set. Activities and recipes get name only.
 struct HomeChecklistAddView: View {
     let list: HomeList
-    let onSave: (String, String?) async -> Void
+    let onSave: (String, [String]) async -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
     @State private var chip = ""
+    @State private var picked: Set<String> = []
     @State private var isSaving = false
     @FocusState private var focused: Bool
 
     private var detentHeight: CGFloat {
         guard list.chipLabel != nil else { return 200 }
-        return list.chipOptions.isEmpty ? 290 : 330
+        return list.chipOptions.isEmpty ? 290 : (list.chipOptions.count > 4 ? 400 : 330)
     }
 
     var body: some View {
@@ -170,20 +173,28 @@ struct HomeChecklistAddView: View {
                                     .background(Color.miraclesSurface)
                                     .clipShape(RoundedRectangle(cornerRadius: 10))
                             } else {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(list.chipOptions, id: \.self) { option in
-                                            Button {
-                                                chip = (chip == option) ? "" : option
-                                            } label: {
-                                                ChecklistChip(text: option)
-                                                    .opacity(chip == option || chip.isEmpty ? 1 : 0.35)
-                                                    .scaleEffect(chip == option ? 1.08 : 1.0)
+                                // A wrapping grid, NOT a horizontal ScrollView. The
+                                // ScrollView swallowed every tap on these chips.
+                                LazyVGrid(
+                                    columns: [GridItem(.adaptive(minimum: 96), spacing: 8, alignment: .leading)],
+                                    alignment: .leading,
+                                    spacing: 8
+                                ) {
+                                    ForEach(list.chipOptions, id: \.self) { option in
+                                        Button {
+                                            if picked.contains(option) {
+                                                picked.remove(option)
+                                            } else {
+                                                if !list.allowsMultipleChips { picked.removeAll() }
+                                                picked.insert(option)
                                             }
-                                            .buttonStyle(.plain)
+                                        } label: {
+                                            ChecklistChip(text: option, selected: picked.contains(option))
+                                                .opacity(picked.isEmpty || picked.contains(option) ? 1 : 0.4)
                                         }
+                                        .buttonStyle(.plain)
+                                        .contentShape(Capsule())
                                     }
-                                    .padding(.vertical, 2)
                                 }
                             }
                         }
@@ -216,9 +227,11 @@ struct HomeChecklistAddView: View {
         guard !value.isEmpty, !isSaving else { return }
         isSaving = true
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        let tag = chip.trimmingCharacters(in: .whitespacesAndNewlines)
+        let typed = chip.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tags = list.chipOptions.isEmpty ? (typed.isEmpty ? [] : [typed])
+                                            : list.chipOptions.filter { picked.contains($0) }
         Task {
-            await onSave(value, tag.isEmpty ? nil : tag)
+            await onSave(value, tags)
             dismiss()
         }
     }
@@ -231,17 +244,8 @@ struct HomeChecklistCard: View {
     let items: [ChecklistItem]
     let completing: Set<String>
     let onAdd: () -> Void
+    let onBrowse: () -> Void
     let onComplete: (ChecklistItem) -> Void
-
-    /// "Browse" goes to the hub we already built, unfiltered — not a
-    /// shortlist-specific view.
-    @ViewBuilder
-    private var hubDestination: some View {
-        switch list {
-        case .restaurants: RestaurantHubView()
-        default:           ActivitiesHubView()
-        }
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -295,8 +299,10 @@ struct HomeChecklistCard: View {
                                         .multilineTextAlignment(.leading)
                                         .fixedSize(horizontal: false, vertical: true)
 
-                                    if let chip = item.chip, !chip.isEmpty {
-                                        ChecklistChip(text: chip)
+                                    if !item.chips.isEmpty {
+                                        HStack(spacing: 4) {
+                                            ForEach(item.chips, id: \.self) { ChecklistChip(text: $0) }
+                                        }
                                     }
                                 }
 
@@ -312,9 +318,11 @@ struct HomeChecklistCard: View {
             }
 
             if list.supportsBrowse {
-                NavigationLink {
-                    hubDestination
-                } label: {
+                // Deliberately a Button, not a NavigationLink. A NavigationLink
+                // inside a List row claims the WHOLE row's tap area: all five
+                // cards share one row, so the entire block navigated to Activities
+                // and every checkbox tap was swallowed. Navigation lives in TodayView.
+                Button(action: onBrowse) {
                     Text("Browse All")
                         .font(.system(size: 11, design: .serif))
                         .foregroundStyle(Color.miraclesAccent)

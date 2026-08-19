@@ -433,19 +433,19 @@ final class NotionService: @unchecked Sendable {
     /// Returns the item carrying its real Notion page ID so the new row can be
     /// checked off without waiting for a refetch.
     @discardableResult
-    func createWatchlistItem(title: String, kind: WatchlistItem.Kind, location: String? = nil) async throws -> WatchlistItem {
+    func createWatchlistItem(title: String, kind: WatchlistItem.Kind, locations: [String] = []) async throws -> WatchlistItem {
         var props: [String: Any] = [
             "Title":   titleProp(title),
             "Type":    ["select": ["name": kind.rawValue]],
             "Watched": ["checkbox": false]
         ]
-        if let location, !location.isEmpty { props["Where"] = ["select": ["name": location]] }
+        if !locations.isEmpty { props["Where"] = ["multi_select": locations.map { ["name": $0] }] }
         let id = try await createPageReturningID(body: [
             "parent": ["database_id": Constants.Notion.listsDBID],
             "properties": props
         ])
         watchlistCache = nil
-        return WatchlistItem(id: id, title: title, kind: kind, watched: false, location: location)
+        return WatchlistItem(id: id, title: title, kind: kind, watched: false, locations: locations)
     }
 
     /// Minimal add from the Home checklist: name only, flagged onto the shortlist.
@@ -834,7 +834,7 @@ final class NotionService: @unchecked Sendable {
                 title:    extractTitle(from: props["Title"]) ?? "Untitled",
                 kind:     WatchlistItem.Kind(rawValue: kindStr) ?? .movie,
                 watched:  (props["Watched"] as? [String: Any])?["checkbox"] as? Bool ?? false,
-                location: extractSelect(from: props["Where"])
+                locations: extractMultiSelect(from: props["Where"])
             )
         }
     }

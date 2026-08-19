@@ -9,7 +9,7 @@ struct ChecklistItem: Identifiable, Equatable {
     let title: String
     /// Small coloured chip under the title: neighbourhood for a restaurant,
     /// streaming service for a show, Theaters/At Home for a movie.
-    var chip: String? = nil
+    var chips: [String] = []
 }
 
 /// The four Home checklists plus the period summary.
@@ -48,9 +48,9 @@ final class HomeListsModel: ObservableObject {
         if let acts { allActivities = acts;  activities  = Self.shortlist(acts) }
         if let watch {
             movies = watch.filter { $0.kind == .movie && !$0.watched }
-                          .map { ChecklistItem(id: $0.id, title: $0.title, chip: $0.location) }
+                          .map { ChecklistItem(id: $0.id, title: $0.title, chips: $0.locations) }
             shows  = watch.filter { $0.kind == .show && !$0.watched }
-                          .map { ChecklistItem(id: $0.id, title: $0.title, chip: $0.location) }
+                          .map { ChecklistItem(id: $0.id, title: $0.title, chips: $0.locations) }
             recipes = watch.filter { $0.kind == .recipe && !$0.watched }
                            .map { ChecklistItem(id: $0.id, title: $0.title) }
         }
@@ -59,7 +59,7 @@ final class HomeListsModel: ObservableObject {
     private static func shortlist(_ rs: [Restaurant]) -> [ChecklistItem] {
         rs.filter { $0.thinkingAbout && !$0.beenThere }
           .map { ChecklistItem(id: $0.id, title: $0.name,
-                               chip: $0.neighborhood.isEmpty ? nil : $0.neighborhood) }
+                               chips: $0.neighborhood.isEmpty ? [] : [$0.neighborhood]) }
     }
 
     private static func shortlist(_ as_: [Activity]) -> [ChecklistItem] {
@@ -116,11 +116,11 @@ final class HomeListsModel: ObservableObject {
 
     // MARK: - Add
 
-    func add(title: String, chip: String?, to list: HomeList) async {
+    func add(title: String, chips: [String], to list: HomeList) async {
         let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
-        let value = chip?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let tag = (value?.isEmpty ?? true) ? nil : value
+        let tags = chips.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let tag = tags.first
         do {
             let id: String
             switch list {
@@ -129,14 +129,14 @@ final class HomeListsModel: ObservableObject {
             case .activities:
                 id = try await NotionService.shared.createActivityOnShortlist(name: name)
             case .movies:
-                id = try await NotionService.shared.createWatchlistItem(title: name, kind: .movie, location: tag).id
+                id = try await NotionService.shared.createWatchlistItem(title: name, kind: .movie, locations: tags).id
             case .shows:
-                id = try await NotionService.shared.createWatchlistItem(title: name, kind: .show, location: tag).id
+                id = try await NotionService.shared.createWatchlistItem(title: name, kind: .show, locations: tags).id
             case .recipes:
                 id = try await NotionService.shared.createWatchlistItem(title: name, kind: .recipe).id
             }
             withAnimation {
-                self[keyPath: list.itemsKey].append(ChecklistItem(id: id, title: name, chip: tag))
+                self[keyPath: list.itemsKey].append(ChecklistItem(id: id, title: name, chips: tags))
             }
         } catch {
             toast = "Couldn't add — check connection"
@@ -194,6 +194,9 @@ enum HomeList: CaseIterable, Identifiable {
     }
 
     /// Label above the chip input; nil = this list has no chip.
+    /// Miracles has no recipe-section page, so nothing is multi-select here yet.
+    var allowsMultipleChips: Bool { false }
+
     var chipLabel: String? {
         switch self {
         case .restaurants: return "Neighborhood"

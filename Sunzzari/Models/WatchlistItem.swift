@@ -7,8 +7,9 @@ struct WatchlistItem: Identifiable, Codable {
     var title: String
     var kind: Kind
     var watched: Bool
-    /// Streaming service for a show, Theaters/At Home for a movie. Nil for recipes.
-    var location: String?
+    /// Streaming service for a show, Theaters/At Home for a movie. Empty for recipes
+    /// (Miracles has no recipe-section page to mirror into).
+    var locations: [String] = []
 
     enum Kind: String, CaseIterable, Codable {
         case movie  = "Movie"

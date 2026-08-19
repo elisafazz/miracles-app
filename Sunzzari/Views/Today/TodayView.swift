@@ -31,6 +31,7 @@ struct TodayView: View {
     // Home checklists. No period row here — Miracles has no cycle feature.
     @StateObject private var lists = HomeListsModel()
     @State private var addTarget: HomeList? = nil
+    @State private var browseTarget: HomeList? = nil
 
     @State private var selectedEntry: BestOfEntry? = nil
     @State private var entryToEdit: BestOfEntry? = nil
@@ -170,6 +171,13 @@ struct TodayView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            // MUST be inside the NavigationStack or it is silently inert.
+            .navigationDestination(item: $browseTarget) { list in
+                switch list {
+                case .restaurants: RestaurantHubView()
+                default:           ActivitiesHubView()
+                }
+            }
         }
         .overlay {
             if let entry = selectedEntry {
@@ -207,8 +215,8 @@ struct TodayView: View {
             BoopView()
         }
         .sheet(item: $addTarget) { list in
-            HomeChecklistAddView(list: list) { name, chip in
-                await lists.add(title: name, chip: chip, to: list)
+            HomeChecklistAddView(list: list) { name, chips in
+                await lists.add(title: name, chips: chips, to: list)
             }
         }
         .task { await load() }
@@ -379,6 +387,7 @@ struct TodayView: View {
             items: lists[keyPath: list.itemsKey],
             completing: lists.completing,
             onAdd: { addTarget = list },
+            onBrowse: { browseTarget = list },
             onComplete: { item in
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 Task { await lists.complete(item, in: list) }

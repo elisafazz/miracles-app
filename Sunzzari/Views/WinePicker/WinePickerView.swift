@@ -6,12 +6,23 @@ struct WinePickerView: View {
 
     // MARK: - State
 
-    private enum PickerStep { case landing, preview, loading, result }
+    private enum PickerStep { case landing, preview, loading, result, reading, tried }
 
     @State private var step: PickerStep = .landing
     @State private var selectedImage: UIImage?
     @State private var resultText: String = ""
     @State private var errorMessage: String?
+
+    // What she wants from this pick ("a white", "by the glass only"). Kept across
+    // "Try Another" so the next page of the same wine list needs no retyping.
+    @State private var notes: String = ""
+    @FocusState private var notesFocused: Bool
+
+    // "Log one I tried": every wine read off the photo. nil until asked for, then kept
+    // for this photo so going back and forth does not pay for a second read.
+    @State private var seenWines: [AnthropicService.WineAutofill]?
+    @State private var wineToLog: AnthropicService.WineAutofill?
+    @State private var loggedIDs: Set<UUID> = []
 
     // Photo library
     @State private var selectedItem: PhotosPickerItem?
@@ -32,6 +43,8 @@ struct WinePickerView: View {
                     case .preview:  previewView
                     case .loading:  loadingView
                     case .result:   resultView
+                    case .reading:  loadingView
+                    case .tried:    triedView
                     }
                 }
                 .animation(.easeInOut(duration: 0.25), value: step)
@@ -53,6 +66,9 @@ struct WinePickerView: View {
             }
         }
         // Camera sheet (fullscreen cover — UIImagePickerController requirement)
+        .sheet(item: $wineToLog) { wine in
+            AddWineView(prefill: wine) { loggedIDs.insert(wine.id) }
+        }
         .fullScreenCover(isPresented: $showCamera) {
             CameraCapture(image: $cameraImage)
                 .ignoresSafeArea()
@@ -130,10 +146,27 @@ struct WinePickerView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
-                        .frame(maxWidth: .infinity)
+                        // minWidth 0: a wide photo otherwise stretches the whole column past the screen edges
+                        .frame(minWidth: 0, maxWidth: .infinity)
                         .frame(height: 280)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .onTapGesture { notesFocused = false }
+                }
+
+                // Optional request for this pick
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Anything specific? (optional)")
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundStyle(Color.miraclesSecondary)
+                    TextField("A white, a red, by the glass only...", text: $notes, axis: .vertical)
+                        .font(.system(size: 16, design: .serif))
+                        .lineLimit(1...3)
+                        .focused($notesFocused)
+                        .padding()
+                        .background(Color.miraclesSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(Color.miraclesText)
                 }
 
                 // Primary CTA
@@ -157,6 +190,7 @@ struct WinePickerView: View {
                 Button {
                     selectedImage = nil
                     selectedItem = nil
+                    seenWines = nil
                     step = .landing
                 } label: {
                     Text("Choose a different photo")
@@ -166,6 +200,7 @@ struct WinePickerView: View {
             }
             .padding(24)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Loading
@@ -177,7 +212,7 @@ struct WinePickerView: View {
                 .scaleEffect(1.6)
                 .tint(Color.miraclesAccent)
 
-            Text("Asking our sommelier…")
+            Text(step == .reading ? "Reading the wines in your photo…" : "Asking our sommelier…")
                 .font(.system(.subheadline, design: .serif))
                 .foregroundStyle(Color.miraclesSecondary)
         }
@@ -205,7 +240,7 @@ struct WinePickerView: View {
                         }
                         .foregroundStyle(Color.miraclesAccent)
 
-                        Text(resultText)
+                        Text(formattedResult)
                             .font(.system(size: 15, design: .serif))
                             .foregroundStyle(Color.miraclesText)
                             .fixedSize(horizontal: false, vertical: true)
@@ -218,8 +253,23 @@ struct WinePickerView: View {
                 // Action buttons
                 VStack(spacing: 12) {
                     Button {
+                        Task { await readWines() }
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "plus.circle")
+                            Text("Log one I tried")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.miraclesSurface)
+                        .foregroundStyle(Color.miraclesAccent)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+
+                    Button {
                         selectedImage = nil
                         selectedItem = nil
+                        seenWines = nil
                         resultText = ""
                         step = .landing
                     } label: {
@@ -246,6 +296,102 @@ struct WinePickerView: View {
             }
             .padding(24)
         }
+    }
+
+    /// The sommelier writes **bold** and *italic* markers. Draw them as formatting, not as
+    /// literal symbols; if the text cannot be parsed, show it as it came.
+    private var formattedResult: AttributedString {
+        (try? AttributedString(
+            markdown: resultText,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )) ?? AttributedString(resultText)
+    }
+
+    // MARK: - Log one I tried
+
+    private var triedView: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                VStack(spacing: 6) {
+                    Text("Which one did you try?")
+                        .font(.system(size: 22, weight: .bold, design: .serif))
+                        .foregroundStyle(Color.miraclesText)
+                    Text("Tap a wine to add it to My Wine")
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundStyle(Color.miraclesSecondary)
+                }
+                .padding(.top, 8)
+
+                let wines = seenWines ?? []
+                if wines.isEmpty {
+                    Text("No wines could be read from this photo. Try a closer, sharper photo.")
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundStyle(Color.miraclesSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 24)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(wines) { wine in
+                            Button { wineToLog = wine } label: { wineRow(wine) }
+                        }
+                    }
+                }
+
+                Button {
+                    step = .result
+                } label: {
+                    Text("Back to the pick")
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundStyle(Color.miraclesSecondary)
+                }
+                .padding(.top, 8)
+            }
+            .padding(24)
+        }
+    }
+
+    private func wineRow(_ wine: AnthropicService.WineAutofill) -> some View {
+        let details = [wine.producer, wine.vintage.map(String.init) ?? "", wine.region, wine.wineType.rawValue]
+            .filter { !$0.isEmpty }
+            .joined(separator: " · ")
+
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(wine.wineName)
+                    .font(.system(size: 16, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.miraclesText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(details)
+                    .font(.system(.subheadline, design: .serif))
+                    .foregroundStyle(Color.miraclesSecondary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 3) {
+                if let cost = wine.cost {
+                    Text(cost, format: .currency(code: "USD").precision(.fractionLength(0...2)))
+                        .font(.system(size: 15, weight: .semibold, design: .serif))
+                        .foregroundStyle(Color.miraclesText)
+                }
+                if loggedIDs.contains(wine.id) {
+                    Text("Added")
+                        .font(.system(size: 12, weight: .semibold, design: .serif))
+                        .foregroundStyle(Color.miraclesAccent)
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold, design: .serif))
+                .foregroundStyle(Color.miraclesSecondary)
+        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 16)
+        .background(Color.miraclesSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     // MARK: - Helpers
@@ -283,13 +429,30 @@ struct WinePickerView: View {
 
     private func analyze() async {
         guard let image = selectedImage else { return }
+        notesFocused = false
         step = .loading
         do {
-            let text = try await AnthropicService.shared.analyzeWineImage(image)
+            let text = try await AnthropicService.shared.analyzeWineImage(image, notes: notes)
             resultText = text
             step = .result
         } catch {
             step = .preview
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func readWines() async {
+        guard let image = selectedImage else { return }
+        if seenWines != nil {
+            step = .tried
+            return
+        }
+        step = .reading
+        do {
+            seenWines = try await AnthropicService.shared.listWines(in: image)
+            step = .tried
+        } catch {
+            step = .result
             errorMessage = error.localizedDescription
         }
     }
